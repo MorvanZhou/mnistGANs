@@ -22,18 +22,21 @@ def mnist_uni_gen_cnn(input_shape):
     ])
 
 
-def mnist_uni_disc_cnn(input_shape=(28, 28, 1)):
-    return keras.Sequential([
-        # [n, 28, 28, n] -> [n, 14, 14, 64]
-        Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=input_shape),
-        LeakyReLU(),
-        Dropout(0.3),
-        # -> [n, 7, 7, 128]
-        Conv2D(128, (4, 4), strides=(2, 2), padding='same'),
-        BatchNormalization(),
-        LeakyReLU(),
-        Dropout(0.3),
-        Flatten(),
-    ])
+def mnist_uni_disc_cnn(input_shape=(28, 28, 1), use_bn=True):
+    model = keras.Sequential()
+    # [n, 28, 28, n] -> [n, 14, 14, 64]
+    model.add(Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=input_shape))
+    model.add(LeakyReLU())
+    if use_bn:
+        model.add(BatchNormalization())
+    model.add(Dropout(0.3))
+    # -> [n, 7, 7, 128]
+    model.add(Conv2D(128, (4, 4), strides=(2, 2), padding='same'))
+    if use_bn:
+        model.add(BatchNormalization())
+    model.add(LeakyReLU())
+    model.add(Dropout(0.3))
+    model.add(Flatten())
+    return model
 
 

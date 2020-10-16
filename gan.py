@@ -1,7 +1,7 @@
 # [Generative Adversarial Nets](https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf)
 import tensorflow as tf
 from tensorflow import keras
-from visual import save_gan
+from visual import save_gan, cvt_gif
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from utils import set_soft_gpu, binary_accuracy, save_weights
@@ -27,7 +27,7 @@ class GAN(keras.Model):
 
     def _get_generator(self):
         model = mnist_uni_gen_cnn((self.latent_dim,))
-        print(model.summary())
+        model.summary()
         return model
 
     def _get_discriminator(self):
@@ -35,7 +35,7 @@ class GAN(keras.Model):
             mnist_uni_disc_cnn(self.img_shape),
             Dense(1)
         ], name="discriminator")
-        print(model.summary())
+        model.summary()
         return model
 
     def train_d(self, img, label):
@@ -46,10 +46,9 @@ class GAN(keras.Model):
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
         return loss, binary_accuracy(label, pred)
 
-    def train_g(self):
-        d_label = tf.ones((BATCH_SIZE, 1), tf.float32)  # let d think generated images are real
+    def train_g(self, d_label):
         with tf.GradientTape() as tape:
-            g_img = self.call(BATCH_SIZE, training=True)
+            g_img = self.call(len(d_label), training=True)
             pred = self.d.call(g_img, training=False)
             loss = self.loss_func(d_label, pred)
         grads = tape.gradient(loss, self.g.trainable_variables)
@@ -57,21 +56,20 @@ class GAN(keras.Model):
         return loss, g_img, binary_accuracy(d_label, pred)
 
     def step(self, img):
-        g_loss, g_img, g_acc = self.train_g()
+        d_label = tf.ones((len(img) * 2, 1), tf.float32)  # let d think generated images are real
+        g_loss, g_img, g_acc = self.train_g(d_label)
 
         d_label = tf.concat((tf.ones((len(img), 1), tf.float32), tf.zeros((len(g_img)//2, 1), tf.float32)), axis=0)
         img = tf.concat((img, g_img[:len(g_img)//2]), axis=0)
         d_loss, d_acc = self.train_d(img, d_label)
-        return g_img, d_loss, d_acc, g_loss, g_acc
+        return d_loss, d_acc, g_loss, g_acc
 
 
-def train():
-    ds = get_ds(BATCH_SIZE)
-    gan = GAN(LATENT_DIM, IMG_SHAPE)
+def train(gan, ds, epoch):
     t0 = time.time()
-    for ep in range(EPOCH):
+    for ep in range(epoch):
         for t, (img, _) in enumerate(ds):
-            g_img, d_loss, d_acc, g_loss, g_acc = gan.step(img)
+            d_loss, d_acc, g_loss, g_acc = gan.step(img)
             if t % 400 == 0:
                 t1 = time.time()
                 print(
@@ -80,6 +78,7 @@ def train():
                 t0 = t1
         save_gan(gan, ep)
     save_weights(gan)
+    cvt_gif(gan)
 
 
 if __name__ == "__main__":
@@ -89,7 +88,9 @@ if __name__ == "__main__":
     EPOCH = 20
 
     set_soft_gpu(True)
-    train()
+    d = get_ds(BATCH_SIZE)
+    m = GAN(LATENT_DIM, IMG_SHAPE)
+    train(m, d, EPOCH)
 
 
 

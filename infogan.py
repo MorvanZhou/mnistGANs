@@ -3,7 +3,7 @@
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-from visual import save_gan
+from visual import save_gan, cvt_gif
 from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Input, BatchNormalization, LeakyReLU
 from utils import set_soft_gpu, binary_accuracy, save_weights, class_accuracy
@@ -62,9 +62,9 @@ class InfoGAN(keras.Model):
             q_style = tf.concat(
                 (self.style_scale * tf.tanh(o_q[:, :style_dim//2]), tf.nn.relu(o_q[:, style_dim//2:style_dim])),
                 axis=1)
-        q_label = o_q[:, style_dim:]
+        q_label = o_q[:, -self.label_dim:]
         model = Model(img, [o_bool, q_style, q_label], name="discriminator")
-        print(model.summary())
+        model.summary()
         return model
 
     def _get_generator(self):
@@ -77,7 +77,7 @@ class InfoGAN(keras.Model):
         s = mnist_uni_gen_cnn((latent_dim,))
         o = s(model_in)
         model = Model([noise, label, style], o, name="generator")
-        print(model.summary())
+        model.summary()
         return model
 
     def loss_mutual_info(self, style, pred_style, label, pred_label):
@@ -135,9 +135,7 @@ class InfoGAN(keras.Model):
         return g_img, d_loss, d_bool_acc, g_loss, g_bool_acc, random_img_label, d_class_acc
 
 
-def train():
-    ds = get_ds(BATCH_SIZE)
-    gan = InfoGAN(RAND_DIM, STYLE_DIM, LABEL_DIM, IMG_SHAPE, FIX_STD, STYLE_SCALE)
+def train(gan, ds):
     t0 = time.time()
     for ep in range(EPOCH):
         for t, (real_img, real_img_label) in enumerate(ds):
@@ -149,6 +147,7 @@ def train():
                 t0 = t1
         save_gan(gan, ep)
     save_weights(gan)
+    cvt_gif(gan)
 
 
 if __name__ == "__main__":
@@ -163,4 +162,6 @@ if __name__ == "__main__":
     EPOCH = 30
 
     set_soft_gpu(True)
-    train()
+    d = get_ds(BATCH_SIZE)
+    m = InfoGAN(RAND_DIM, STYLE_DIM, LABEL_DIM, IMG_SHAPE, FIX_STD, STYLE_SCALE)
+    train(m, d)

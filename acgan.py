@@ -3,7 +3,7 @@
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-from visual import save_gan
+from visual import save_gan, cvt_gif
 from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Input
 from utils import set_soft_gpu, binary_accuracy, save_weights
@@ -45,7 +45,7 @@ class ACGAN(keras.Model):
         o = s(img)
         o_bool, o_class = o[:, :1], o[:, 1:]
         model = Model(img, [o_bool, o_class], name="discriminator")
-        print(model.summary())
+        model.summary()
         return model
 
     def _get_generator(self):
@@ -56,7 +56,7 @@ class ACGAN(keras.Model):
         s = mnist_uni_gen_cnn((self.latent_dim+self.label_dim,))
         o = s(model_in)
         model = Model([noise, label], o, name="generator")
-        print(model.summary())
+        model.summary()
         return model
 
     def train_d(self, img, img_label, label):
@@ -92,9 +92,7 @@ class ACGAN(keras.Model):
         return g_img, d_loss, d_bool_acc, g_loss, g_bool_loss, random_img_label
 
 
-def train():
-    ds = get_ds(BATCH_SIZE)
-    gan = ACGAN(LATENT_DIM, LABEL_DIM, IMG_SHAPE)
+def train(gan, ds):
     t0 = time.time()
     for ep in range(EPOCH):
         for t, (real_img, real_img_label) in enumerate(ds):
@@ -106,6 +104,7 @@ def train():
                 t0 = t1
         save_gan(gan, ep)
     save_weights(gan)
+    cvt_gif(gan)
 
 
 if __name__ == "__main__":
@@ -116,4 +115,6 @@ if __name__ == "__main__":
     EPOCH = 20
 
     set_soft_gpu(True)
-    train()
+    d = get_ds(BATCH_SIZE)
+    m = ACGAN(LATENT_DIM, LABEL_DIM, IMG_SHAPE)
+    train(m, d)
