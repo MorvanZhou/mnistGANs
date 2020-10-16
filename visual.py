@@ -1,14 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from tensorflow import keras
-import tensorflow as tf
-from utils import set_soft_gpu
 import os
+from PIL import Image
 
 os.makedirs("visual", exist_ok=True)
 
 
 def show_mnist(n=20):
+    from tensorflow import keras
     (x, y), _ = keras.datasets.mnist.load_data()
     idx = np.random.randint(0, len(x), n)
     x, y = x[idx], y[idx]
@@ -29,7 +28,7 @@ def show_mnist(n=20):
 
 def save_gan(model, ep):
     name = model.__class__.__name__.lower()
-    if name in ["gan", "wgan", "wgangp"]:
+    if name in ["gan", "wgan", "wgangp", "lsgan"]:
         imgs = model.call(100, training=False).numpy()
         _save_gan(name, ep, imgs, show_label=False)
     elif name == "cgan" or name == "acgan":
@@ -43,6 +42,8 @@ def save_gan(model, ep):
         img_info = img_label, img_style
         imgs = model.predict(img_info)
         _save_gan(name, ep, imgs, show_label=False)
+    else:
+        raise ValueError(name)
 
 
 def _save_gan(model_name, ep, imgs, show_label=False):
@@ -66,6 +67,7 @@ def _save_gan(model_name, ep, imgs, show_label=False):
 
 
 def infogan_comp():
+    import tensorflow as tf
     from infogan import InfoGAN
     STYLE_DIM = 2
     LABEL_DIM = 10
@@ -104,9 +106,32 @@ def infogan_comp():
     plot(noise, img_label, np.concatenate((np.zeros_like(img_style), img_style), axis=1), 2)
 
 
+def cvt_gif(folders_or_gan):
+    if not isinstance(folders_or_gan, list):
+        folders_or_gan = [folders_or_gan.__class__.__name__.lower()]
+    for folder in folders_or_gan:
+        folder = "visual/"+folder
+        fs = [folder+"/" + f for f in os.listdir(folder)]
+        imgs = []
+        for f in sorted(fs, key=os.path.getmtime):
+            if not f.endswith(".png"):
+                continue
+            try:
+                int(os.path.basename(f).split(".")[0])
+            except ValueError:
+                continue
+            imgs.append(Image.open(f))
+        path = "{}/generating.gif".format(folder)
+        if os.path.exists(path):
+            os.remove(path)
+        img = Image.new(imgs[0].mode, imgs[0].size, color=(255, 255, 255, 255))
+        img.save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0)
+        print("saved ", path)
+
+
 if __name__ == "__main__":
-    set_soft_gpu(True)
     # save_gan("test", np.random.random((64, 28, 28, 1)), 0, np.arange(0, 64))
     # cgan_res()
     # save_infogan(None, 1)
-    infogan_comp()
+    # infogan_comp()
+    cvt_gif(["wgangp", "wgan", "infogan", "cgan", "acgan", "gan"])
