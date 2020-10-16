@@ -7,7 +7,7 @@ WIP
 - [ACGAN](acgan.py) 
 - [InfoGAN](infogan.py) 
 - [WGAN](wgan.py) 
- - [WGAN gp](wgan_gp.py) 
+    - [WGAN gp](wgan_gp.py) 
 - WIP
  
  
