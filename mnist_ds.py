@@ -2,13 +2,23 @@ from tensorflow import keras
 import tensorflow as tf
 
 
+def get_half_batch_ds(batch_size):
+    return get_half_batch_ds(batch_size//2)
+
+
 def get_ds(batch_size):
     (x, y), _ = keras.datasets.mnist.load_data()
     x = _process_x(x)
     y = tf.cast(y, tf.int32)
-    ds = tf.data.Dataset.from_tensor_slices((x, y)).cache().shuffle(1024).batch(batch_size//2)\
+    ds = tf.data.Dataset.from_tensor_slices((x, y)).cache().shuffle(1024).batch(batch_size) \
         .prefetch(tf.data.experimental.AUTOTUNE)
     return ds
+
+
+def get_test_x():
+    (_, _), (x, _) = keras.datasets.mnist.load_data()
+    x = _process_x(x)
+    return x
 
 
 def get_train_x():

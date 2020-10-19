@@ -2,7 +2,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from utils import set_soft_gpu
-from mnist_ds import get_ds
+from mnist_ds import get_half_batch_ds
 from gan import GAN, train
 
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     EPOCH = 20
 
     set_soft_gpu(True)
-    d = get_ds(BATCH_SIZE)
+    d = get_half_batch_ds(BATCH_SIZE)
     m = LSGAN(LATENT_DIM, IMG_SHAPE, A, B, C)
     train(m, d, EPOCH)
 

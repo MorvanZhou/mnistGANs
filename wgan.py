@@ -14,7 +14,7 @@ class WGAN(keras.Model):
     Wasserstein 距离作为损失函数， 避免D太强导致G的梯度消失。
     D 最大化 Wasserstein 距离，提高收敛性
     G 最小化 Wasserstein 距离
-    Clip D weights，局限住太强的 D，让 G 可以跟上。
+    Clip D weights，局限住太强的 D，让 G 可以跟上 (Lipschitz 约束)。
     """
     def __init__(self, latent_dim, clip, img_shape):
         super().__init__()

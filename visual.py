@@ -26,24 +26,62 @@ def show_mnist(n=20):
     # plt.show()
 
 
-def save_gan(model, ep):
+def save_gan(model, ep, **kwargs):
     name = model.__class__.__name__.lower()
-    if name in ["gan", "wgan", "wgangp", "lsgan"]:
+    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv"]:
         imgs = model.call(100, training=False).numpy()
         _save_gan(name, ep, imgs, show_label=False)
     elif name == "cgan" or name == "acgan":
         img_label = np.arange(0, 10).astype(np.int32).repeat(10, axis=0)
         imgs = model.predict(img_label)
         _save_gan(name, ep, imgs, show_label=True)
-    elif name == "infogan":
-        img_label = np.arange(0, 10).astype(np.int32).repeat(10, axis=0)
+    elif name in ["infogan"]:
+        img_label = np.arange(0, model.label_dim).astype(np.int32).repeat(10, axis=0)
         img_style = np.concatenate(
             [np.linspace(-model.style_scale, model.style_scale, 10)] * 10).reshape((100, 1)).repeat(model.style_dim, axis=1).astype(np.float32)
         img_info = img_label, img_style
         imgs = model.predict(img_info)
         _save_gan(name, ep, imgs, show_label=False)
+    elif name == "ccgan":
+        if "img" not in kwargs:
+            raise ValueError
+        input_img = kwargs["img"][:100]
+        mask_width = np.random.randint(model.mask_range[0], model.mask_range[1], len(input_img))
+        mask = np.ones(input_img.shape, np.float32)
+        for i, w in enumerate(mask_width):
+            mask_xy = np.random.randint(0, model.img_shape[0] - w, 2)
+            x0, x1 = mask_xy[0], w + mask_xy[0]
+            y0, y1 = mask_xy[1], w + mask_xy[1]
+            mask[i, x0:x1, y0:y1] = 0
+        masked_img = input_img * mask
+        imgs = model.predict(masked_img)
+        _save_ccgan(name, ep, masked_img.numpy(), imgs)
     else:
         raise ValueError(name)
+
+
+def _save_ccgan(model_name, ep, masked, imgs):
+    imgs = (imgs + 1) * 255 / 2
+    plt.clf()
+    nc, nr = 20, 10
+    plt.figure(0, (nc * 2, nr * 2))
+    i = 0
+    for c in range(0, nc, 2):
+        for r in range(nr):
+            n = r * nc + c
+            plt.subplot(nr, nc, n + 1)
+            plt.imshow(masked[i], cmap="gray")
+            plt.axis("off")
+            plt.subplot(nr, nc, n + 2)
+            plt.imshow(imgs[i], cmap="gray_r")
+            plt.axis("off")
+            i += 1
+
+    plt.tight_layout()
+    dir_ = "visual/{}".format(model_name)
+    os.makedirs(dir_, exist_ok=True)
+    path = dir_ + "/{}.png".format(ep)
+    plt.savefig(path)
 
 
 def _save_gan(model_name, ep, imgs, show_label=False):
@@ -54,7 +92,7 @@ def _save_gan(model_name, ep, imgs, show_label=False):
     for c in range(nc):
         for r in range(nr):
             i = r * nc + c
-            plt.subplot(nc, nr, i + 1)
+            plt.subplot(nr, nc, i + 1)
             plt.imshow(imgs[i], cmap="gray_r")
             plt.axis("off")
             if show_label:

@@ -7,7 +7,7 @@ from visual import save_gan, cvt_gif
 from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Input, BatchNormalization, LeakyReLU
 from utils import set_soft_gpu, binary_accuracy, save_weights, class_accuracy
-from mnist_ds import get_ds
+from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
 import time
 
@@ -28,7 +28,7 @@ class InfoGAN(keras.Model):
         self.g = self._get_generator()
         self.d = self._get_discriminator()
 
-        self.opt = keras.optimizers.Adam(0.0002, beta_1=0.5)
+        self.opt = keras.optimizers.Adam(0.0001, beta_1=0.2)
         self.loss_bool = keras.losses.BinaryCrossentropy(from_logits=True, reduction="none")
 
     def call(self, img_info, training=None, mask=None):
@@ -132,14 +132,14 @@ class InfoGAN(keras.Model):
         real_fake_d_label = tf.concat(      # 32+32
             (tf.ones((len(real_img_label), 1), tf.float32), tf.zeros((len(g_img)//2, 1), tf.float32)), axis=0)
         d_loss, d_bool_acc, d_class_acc = self.train_d(real_fake_img, real_fake_d_label, random_img_label, random_img_style)
-        return g_img, d_loss, d_bool_acc, g_loss, g_bool_acc, random_img_label, d_class_acc
+        return d_loss, d_bool_acc, g_loss, g_bool_acc, random_img_label, d_class_acc
 
 
 def train(gan, ds):
     t0 = time.time()
     for ep in range(EPOCH):
         for t, (real_img, real_img_label) in enumerate(ds):
-            g_img, d_loss, d_bool_acc, g_loss, g_bool_acc, g_img_label, d_class_acc = gan.step(real_img, real_img_label)
+            d_loss, d_bool_acc, g_loss, g_bool_acc, g_img_label, d_class_acc = gan.step(real_img, real_img_label)
             if t % 400 == 0:
                 t1 = time.time()
                 print("ep={} | time={:.1f}|t={}|d_acc={:.2f}|d_classacc={:.2f}|g_acc={:.2f}|d_loss={:.2f}|g_loss={:.2f}".format(
@@ -159,9 +159,9 @@ if __name__ == "__main__":
     FIX_STD = True
     STYLE_SCALE = 1
     BATCH_SIZE = 64
-    EPOCH = 30
+    EPOCH = 40
 
     set_soft_gpu(True)
-    d = get_ds(BATCH_SIZE)
+    d = get_half_batch_ds(BATCH_SIZE)
     m = InfoGAN(RAND_DIM, STYLE_DIM, LABEL_DIM, IMG_SHAPE, FIX_STD, STYLE_SCALE)
     train(m, d)

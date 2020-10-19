@@ -7,7 +7,7 @@ from visual import save_gan, cvt_gif
 from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Input
 from utils import set_soft_gpu, binary_accuracy, save_weights
-from mnist_ds import get_ds
+from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
 import time
 
@@ -115,6 +115,6 @@ if __name__ == "__main__":
     EPOCH = 20
 
     set_soft_gpu(True)
-    d = get_ds(BATCH_SIZE)
+    d = get_half_batch_ds(BATCH_SIZE)
     m = ACGAN(LATENT_DIM, LABEL_DIM, IMG_SHAPE)
     train(m, d)
