@@ -55,13 +55,26 @@ def save_gan(model, ep, **kwargs):
             mask[i, x0:x1, y0:y1] = 0
         masked_img = input_img * mask
         imgs = model.predict(masked_img)
-        _save_ccgan(name, ep, masked_img.numpy(), imgs)
+        imgs = _img_recenter(imgs)
+        masked_img = _img_recenter(masked_img.numpy())
+        _save_img2img_gan(name, ep, masked_img, imgs)
+    elif name == "cyclegan":
+        if "img6" not in kwargs or "img9" not in kwargs:
+            raise ValueError
+        img6, img9 = kwargs["img6"][:50], kwargs["img9"][:50]
+        img9_, img6_ = model.g.call(img6, training=False), model.f.call(img9, training=False)
+        img = np.concatenate((_img_recenter(img6.numpy()), _img_recenter(img9.numpy())), axis=0)
+        imgs = np.concatenate((_img_recenter(img9_.numpy()), _img_recenter(img6_.numpy())), axis=0)
+        _save_img2img_gan(name, ep, img, imgs)
     else:
         raise ValueError(name)
 
 
-def _save_ccgan(model_name, ep, masked, imgs):
-    imgs = (imgs + 1) * 255 / 2
+def _img_recenter(img):
+    return (img + 1) * 255 / 2
+
+
+def _save_img2img_gan(model_name, ep, img1, img2):
     plt.clf()
     nc, nr = 20, 10
     plt.figure(0, (nc * 2, nr * 2))
@@ -70,10 +83,10 @@ def _save_ccgan(model_name, ep, masked, imgs):
         for r in range(nr):
             n = r * nc + c
             plt.subplot(nr, nc, n + 1)
-            plt.imshow(masked[i], cmap="gray")
+            plt.imshow(img1[i], cmap="gray")
             plt.axis("off")
             plt.subplot(nr, nc, n + 2)
-            plt.imshow(imgs[i], cmap="gray_r")
+            plt.imshow(img2[i], cmap="gray_r")
             plt.axis("off")
             i += 1
 

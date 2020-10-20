@@ -8,14 +8,13 @@ from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Input
 from utils import set_soft_gpu, binary_accuracy, save_weights
 from mnist_ds import get_ds, get_test_x
-from gan_cnn import mnist_uni_disc_cnn
+from gan_cnn import mnist_uni_disc_cnn, mnist_uni_img2img
 import time
 
 
 class CCGAN(keras.Model):
     """
-    discriminator 标签+图片 预测 真假
-    generator 标签 生成 图片
+    生成图片中被遮挡的部分
     """
     def __init__(self, label_dim, mask_range, img_shape):
         super().__init__()
@@ -38,8 +37,8 @@ class CCGAN(keras.Model):
     def _get_discriminator(self):
         img = Input(shape=self.img_shape)
         s = Sequential([
-            keras.layers.GaussianNoise(0.01),   # add some noise
-            mnist_uni_disc_cnn(input_shape=self.img_shape),
+            keras.layers.GaussianNoise(0.01, input_shape=self.img_shape),   # add some noise
+            mnist_uni_disc_cnn(),
             Dense(1+self.label_dim)
         ])
         o = s(img)
@@ -49,27 +48,7 @@ class CCGAN(keras.Model):
         return model
 
     def _get_generator(self):
-        model = keras.Sequential([
-            # [n, 28, 28, n] -> [n, 14, 14, 64]
-            keras.layers.Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=self.img_shape),
-            keras.layers.ReLU(),
-            keras.layers.BatchNormalization(),
-            # -> [n, 7, 7, 128]
-            keras.layers.Conv2D(128, (4, 4), strides=(2, 2), padding='same'),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-
-            # -> [n, 14, 14, 64]
-            keras.layers.Conv2DTranspose(64, (4, 4), strides=(2, 2), padding='same'),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            # -> [n, 28, 28, 32]
-            keras.layers.Conv2DTranspose(32, (4, 4), strides=(2, 2), padding='same'),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            # -> [n, 28, 28, 1]
-            keras.layers.Conv2D(1, (4, 4), padding='same', activation=keras.activations.tanh)
-        ], name="generator")
+        model = mnist_uni_img2img(self.img_shape)
         model.summary()
         return model
 
