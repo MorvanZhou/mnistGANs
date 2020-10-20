@@ -171,12 +171,14 @@ def cvt_gif(folders_or_gan):
                 int(os.path.basename(f).split(".")[0])
             except ValueError:
                 continue
-            imgs.append(Image.open(f))
+            img = Image.open(f)
+            img = img.resize((img.width//8, img.height//8), Image.ANTIALIAS)
+            imgs.append(img)
         path = "{}/generating.gif".format(folder)
         if os.path.exists(path):
             os.remove(path)
         img = Image.new(imgs[0].mode, imgs[0].size, color=(255, 255, 255, 255))
-        img.save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0)
+        img.save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0, dpi=100)
         print("saved ", path)
 
 
@@ -185,4 +187,4 @@ if __name__ == "__main__":
     # cgan_res()
     # save_infogan(None, 1)
     # infogan_comp()
-    cvt_gif(["wgangp", "wgan", "infogan", "cgan", "acgan", "gan"])
+    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "gan", "lsgan", "infogan", "ccgan", "cyclegan"])
