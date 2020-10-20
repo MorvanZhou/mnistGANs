@@ -172,18 +172,18 @@ def cvt_gif(folders_or_gan):
             except ValueError:
                 continue
             img = Image.open(f)
-            img = img.resize((img.width//8, img.height//8), Image.ANTIALIAS)
+            img = img.resize((img.width//10, img.height//10), Image.ANTIALIAS)
             imgs.append(img)
         path = "{}/generating.gif".format(folder)
         if os.path.exists(path):
             os.remove(path)
         img = Image.new(imgs[0].mode, imgs[0].size, color=(255, 255, 255, 255))
-        img.save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0, dpi=100)
+        img.save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0)
         print("saved ", path)
 
 
 if __name__ == "__main__":
-    # save_gan("test", np.random.random((64, 28, 28, 1)), 0, np.arange(0, 64))
+    # show_mnist(20)
     # cgan_res()
     # save_infogan(None, 1)
     # infogan_comp()
