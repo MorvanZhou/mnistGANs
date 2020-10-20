@@ -1,5 +1,13 @@
 # GANs implementations using MNIST data
 
+This repo is a collection of the implementations of GANs. 
+All GANs try to minimum the code and run on the MNINST dataset.
+
+What does the data look like?
+
+![](visual/mnist.png)
+
+Toy implementations are organized as following:
 
 **1. No condition**
 
