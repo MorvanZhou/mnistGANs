@@ -26,9 +26,9 @@ def mnist_uni_disc_cnn(input_shape=(28, 28, 1), use_bn=True):
     model = keras.Sequential()
     # [n, 28, 28, n] -> [n, 14, 14, 64]
     model.add(Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=input_shape))
-    model.add(LeakyReLU())
     if use_bn:
         model.add(BatchNormalization())
+    model.add(LeakyReLU())
     model.add(Dropout(0.3))
     # -> [n, 7, 7, 128]
     model.add(Conv2D(128, (4, 4), strides=(2, 2), padding='same'))
@@ -39,4 +39,28 @@ def mnist_uni_disc_cnn(input_shape=(28, 28, 1), use_bn=True):
     model.add(Flatten())
     return model
 
+
+def mnist_uni_img2img(img_shape, name="generator"):
+    model = keras.Sequential([
+        # [n, 28, 28, n] -> [n, 14, 14, 64]
+        Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=img_shape),
+        BatchNormalization(),
+        LeakyReLU(),
+        # -> [n, 7, 7, 128]
+        Conv2D(128, (4, 4), strides=(2, 2), padding='same'),
+        BatchNormalization(),
+        LeakyReLU(),
+
+        # -> [n, 14, 14, 64]
+        Conv2DTranspose(64, (4, 4), strides=(2, 2), padding='same'),
+        BatchNormalization(),
+        ReLU(),
+        # -> [n, 28, 28, 32]
+        Conv2DTranspose(32, (4, 4), strides=(2, 2), padding='same'),
+        BatchNormalization(),
+        ReLU(),
+        # -> [n, 28, 28, 1]
+        Conv2D(1, (4, 4), padding='same', activation=keras.activations.tanh)
+    ], name=name)
+    return model
 
