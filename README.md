@@ -1,7 +1,8 @@
 # GANs implementations using MNIST data
 
 This repo is a collection of the implementations of GANs. 
-All GANs try to minimum the code and run on the MNINST dataset.
+In order to make the codes easy to read and follow,
+ I minimize the code and run on a same MNIST dataset.
 
 What does the data look like?
 
@@ -17,13 +18,13 @@ Toy implementations are organized as following:
     - [Gradient Penalty (WGAN gp)](#WGANpg) 
     - [Wasserstein Divergence (WGAN_div)](#WGANdiv)
     
-**2. With some condition**
+**2. With conditions**
 
 - [Conditional GAN (CGAN)](#CGAN) 
 - [Auxiliary Classifier GAN (ACGAN)](#ACGAN) 
 - [InfoGAN](#InfoGAN) 
 
-**3. Change information in picture**
+**3. Image to image transformation**
 
 - [Context-Conditional GAN (CCGAN)](#CCGAN)
 - [CycleGAN](#CycleGAN)
