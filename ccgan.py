@@ -4,8 +4,6 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 from visual import save_gan, cvt_gif
-from tensorflow.keras import Sequential, Model
-from tensorflow.keras.layers import Dense, Input
 from utils import set_soft_gpu, binary_accuracy, save_weights
 from mnist_ds import get_ds, get_test_x
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_img2img
@@ -35,15 +33,15 @@ class CCGAN(keras.Model):
         return self.g.call(img, training=training)
 
     def _get_discriminator(self):
-        img = Input(shape=self.img_shape)
-        s = Sequential([
+        img = keras.Input(shape=self.img_shape)
+        s = keras.Sequential([
             keras.layers.GaussianNoise(0.01, input_shape=self.img_shape),   # add some noise
             mnist_uni_disc_cnn(),
-            Dense(1+self.label_dim)
+            keras.layers.Dense(1+self.label_dim)
         ])
         o = s(img)
         o_bool, o_class = o[:, :-self.label_dim], o[:, -self.label_dim:]
-        model = Model(img, [o_bool, o_class], name="discriminator")
+        model = keras.Model(img, [o_bool, o_class], name="discriminator")
         model.summary()
         return model
 

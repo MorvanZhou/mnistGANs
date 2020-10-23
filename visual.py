@@ -42,7 +42,7 @@ def save_gan(model, ep, **kwargs):
         img_info = img_label, img_style
         imgs = model.predict(img_info)
         _save_gan(name, ep, imgs, show_label=False)
-    elif name == "ccgan":
+    elif name in ["ccgan", "pix2pix"]:
         if "img" not in kwargs:
             raise ValueError
         input_img = kwargs["img"][:100]
