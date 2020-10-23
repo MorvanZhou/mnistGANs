@@ -3,8 +3,6 @@
 import tensorflow as tf
 from tensorflow import keras
 from visual import save_gan, cvt_gif
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
 from utils import set_soft_gpu, binary_accuracy, save_weights
 from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
@@ -32,9 +30,9 @@ class GAN(keras.Model):
         return model
 
     def _get_discriminator(self):
-        model = Sequential([
+        model = keras.Sequential([
             mnist_uni_disc_cnn(self.img_shape),
-            Dense(1)
+            keras.layers.Dense(1)
         ], name="discriminator")
         model.summary()
         return model

@@ -4,7 +4,6 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 from visual import save_gan, cvt_gif
-from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Reshape, Input, Embedding
 from utils import set_soft_gpu, binary_accuracy, save_weights
 from mnist_ds import get_half_batch_ds
@@ -41,12 +40,12 @@ class CGAN(keras.Model):
         label_emb = Embedding(10, 32)(label)
         emb_img = Reshape((28, 28, 1))(Dense(28*28, activation=keras.activations.relu)(label_emb))
         concat_img = tf.concat((img, emb_img), axis=3)
-        s = Sequential([
+        s = keras.Sequential([
             mnist_uni_disc_cnn(input_shape=[28, 28, 2]),
             Dense(1)
         ])
         o = s(concat_img)
-        model = Model([img, label], o, name="discriminator")
+        model = keras.Model([img, label], o, name="discriminator")
         model.summary()
         return model
 
@@ -57,7 +56,7 @@ class CGAN(keras.Model):
         model_in = tf.concat((noise, label_onehot), axis=1)
         s = mnist_uni_gen_cnn((self.latent_dim+self.label_dim,))
         o = s(model_in)
-        model = Model([noise, label], o, name="generator")
+        model = keras.Model([noise, label], o, name="generator")
         model.summary()
         return model
 

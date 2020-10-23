@@ -4,8 +4,6 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 from visual import save_gan, cvt_gif
-from tensorflow.keras import Sequential, Model
-from tensorflow.keras.layers import Dense, Input
 from utils import set_soft_gpu, binary_accuracy, save_weights
 from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
@@ -37,25 +35,25 @@ class ACGAN(keras.Model):
         return self.g.call([noise, target_labels], training=training)
 
     def _get_discriminator(self):
-        img = Input(shape=self.img_shape)
-        s = Sequential([
+        img = keras.Input(shape=self.img_shape)
+        s = keras.Sequential([
             mnist_uni_disc_cnn(input_shape=self.img_shape),
-            Dense(11)
+            keras.layers.Dense(11)
         ])
         o = s(img)
         o_bool, o_class = o[:, :1], o[:, 1:]
-        model = Model(img, [o_bool, o_class], name="discriminator")
+        model = keras.Model(img, [o_bool, o_class], name="discriminator")
         model.summary()
         return model
 
     def _get_generator(self):
-        noise = Input(shape=(self.latent_dim,))
-        label = Input(shape=(), dtype=tf.int32)
+        noise = keras.Input(shape=(self.latent_dim,))
+        label = keras.Input(shape=(), dtype=tf.int32)
         label_onehot = tf.one_hot(label, depth=self.label_dim)
         model_in = tf.concat((noise, label_onehot), axis=1)
         s = mnist_uni_gen_cnn((self.latent_dim+self.label_dim,))
         o = s(model_in)
-        model = Model([noise, label], o, name="generator")
+        model = keras.Model([noise, label], o, name="generator")
         model.summary()
         return model
 

@@ -4,7 +4,6 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 from visual import save_gan, cvt_gif
-from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Dense, Input, BatchNormalization, LeakyReLU
 from utils import set_soft_gpu, binary_accuracy, save_weights, class_accuracy
 from mnist_ds import get_half_batch_ds
@@ -42,12 +41,12 @@ class InfoGAN(keras.Model):
 
     def _get_discriminator(self):
         img = Input(shape=self.img_shape)
-        s = Sequential([
+        s = keras.Sequential([
             mnist_uni_disc_cnn(self.img_shape),
             Dense(1024)
         ])
         style_dim = self.style_dim if self.fix_std else self.style_dim * 2
-        q = Sequential([
+        q = keras.Sequential([
             Dense(128, input_shape=(1024,)),
             BatchNormalization(),
             LeakyReLU(),
@@ -63,7 +62,7 @@ class InfoGAN(keras.Model):
                 (self.style_scale * tf.tanh(o_q[:, :style_dim//2]), tf.nn.relu(o_q[:, style_dim//2:style_dim])),
                 axis=1)
         q_label = o_q[:, -self.label_dim:]
-        model = Model(img, [o_bool, q_style, q_label], name="discriminator")
+        model = keras.Model(img, [o_bool, q_style, q_label], name="discriminator")
         model.summary()
         return model
 
@@ -76,7 +75,7 @@ class InfoGAN(keras.Model):
         model_in = tf.concat((noise, label_onehot, style), axis=1)
         s = mnist_uni_gen_cnn((latent_dim,))
         o = s(model_in)
-        model = Model([noise, label, style], o, name="generator")
+        model = keras.Model([noise, label, style], o, name="generator")
         model.summary()
         return model
 

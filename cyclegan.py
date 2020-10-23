@@ -3,8 +3,6 @@
 import tensorflow as tf
 from tensorflow import keras
 from visual import save_gan, cvt_gif
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
 from utils import set_soft_gpu, save_weights
 from mnist_ds import get_69_ds, get_test_69
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_img2img
@@ -36,10 +34,10 @@ class CycleGAN(keras.Model):
         return model
 
     def _get_discriminator(self, name):
-        model = Sequential([
+        model = keras.Sequential([
             keras.layers.GaussianNoise(0.01, input_shape=self.img_shape),   # add some noise
             mnist_uni_disc_cnn(),
-            Dense(1)
+            keras.layers.Dense(1)
         ], name=name)
         model.summary()
         return model
