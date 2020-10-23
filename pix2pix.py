@@ -13,6 +13,7 @@ import time
 class Pix2Pix(keras.Model):
     """
     根据输入图片,按要求生成输出图片
+    包含Unet, PatchGAN
     """
     def __init__(self, mask_range, img_shape, lambda_):
         super().__init__()
