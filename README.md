@@ -1,10 +1,10 @@
-# GANs implementations using MNIST data
+# GANs implementation using MNIST data
 
-This repo is a collection of the implementations of GANs. 
+This repo is a collection of the implementations of many GANs. 
 In order to make the codes easy to read and follow,
- I minimize the code and run on a same MNIST dataset.
+ I minimize the code and run on the same MNIST dataset.
 
-What does the data look like?
+What does the MNIST data look like?
 
 ![](visual/mnist.png)
 
@@ -29,6 +29,7 @@ Toy implementations are organized as following:
 - [Context-Conditional GAN (CCGAN)](#CCGAN)
 - [CycleGAN](#CycleGAN)
 - [Pix2Pix](#Pix2Pix)
+- [Super-Resolution GAN](#SRGAN)
 - WIP
  
  
@@ -110,3 +111,10 @@ Toy implementations are organized as following:
 [code](pix2pix.py)
 
 ![](visual/pix2pix/generating.gif)
+
+## SRGAN
+[Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://openaccess.thecvf.com/content_cvpr_2017/papers/Ledig_Photo-Realistic_Single_Image_CVPR_2017_paper.pdf)
+
+[code](srgan.py)
+
+![](visual/srgan/generating.gif)

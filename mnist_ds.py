@@ -40,3 +40,9 @@ def get_69_ds():
     (x, y), _ = keras.datasets.mnist.load_data()
     x6, x9 = x[y == 6], x[y == 9]
     return _process_x(x6), _process_x(x9)
+
+
+def downsampling(imgs, to_shape):
+    s = to_shape[:2]
+    imgs = tf.random.normal(imgs.shape, 0, 0.2) + imgs
+    return tf.image.resize(imgs, size=s)
