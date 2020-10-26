@@ -177,8 +177,7 @@ def cvt_gif(folders_or_gan):
         path = "{}/generating.gif".format(folder)
         if os.path.exists(path):
             os.remove(path)
-        img = Image.new(imgs[0].mode, imgs[0].size, color=(255, 255, 255, 255))
-        img.save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0)
+        imgs[-1].save(path, append_images=imgs, optimize=False, save_all=True, duration=400, loop=0)
         print("saved ", path)
 
 
@@ -187,4 +186,4 @@ if __name__ == "__main__":
     # cgan_res()
     # save_infogan(None, 1)
     # infogan_comp()
-    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "gan", "lsgan", "infogan", "ccgan", "cyclegan"])
+    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "gan", "lsgan", "infogan", "ccgan", "cyclegan", "pix2pix"])
