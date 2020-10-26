@@ -66,6 +66,13 @@ def save_gan(model, ep, **kwargs):
         img = np.concatenate((_img_recenter(img6.numpy()), _img_recenter(img9.numpy())), axis=0)
         imgs = np.concatenate((_img_recenter(img9_.numpy()), _img_recenter(img6_.numpy())), axis=0)
         _save_img2img_gan(name, ep, img, imgs)
+    elif name in ["srgan"]:
+        if "img" not in kwargs:
+            raise ValueError
+        input_img = kwargs["img"][:100]
+        imgs = model.predict(input_img)
+        imgs = _img_recenter(imgs)
+        _save_img2img_gan(name, ep, input_img, imgs)
     else:
         raise ValueError(name)
 
