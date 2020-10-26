@@ -13,8 +13,8 @@ class SRGAN(keras.Model):
     """
     低清图片高清化
     感知相似性(对抗损失+内容损失)生成逼真高清图片.
-    原算法中使用预训练 VGG 作为 feature map 的提取器, 对计算"生成像素误差", 我不想引入太多网络,
-    所以我直接使用 Discriminator 的 feature map 做这件事.
+    原算法中使用预训练 VGG 作为 feature map 的提取器, 计算"生成像素误差", 我不想引入太多网络,
+    所以我直接使用 Discriminator 的 feature map 做这件事, 效果还可以的.
     """
     def __init__(self, lr_img_shape, hr_img_shape, lambda_adver):
         super().__init__()
