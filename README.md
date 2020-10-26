@@ -32,6 +32,13 @@ Toy implementations are organized as following:
 - [Super-Resolution GAN](#SRGAN)
 - WIP
  
+# Installation
+```shell script
+$ git clone https://github.com/MorvanZhou/mnistGANs
+$ cd mnistGANs/
+$ pip3 install -r requirements.txt
+```
+
  
 ## DCGAN
 [Generative Adversarial Nets](https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf)
