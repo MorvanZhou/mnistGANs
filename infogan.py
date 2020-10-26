@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 from visual import save_gan, cvt_gif
-from tensorflow.keras.layers import Dense, Input, BatchNormalization, LeakyReLU
+from tensorflow.keras.layers import Dense, Input, BatchNormalization, LeakyReLU, Dropout
 from utils import set_soft_gpu, binary_accuracy, save_weights, class_accuracy
 from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
@@ -27,7 +27,7 @@ class InfoGAN(keras.Model):
         self.g = self._get_generator()
         self.d = self._get_discriminator()
 
-        self.opt = keras.optimizers.Adam(0.0001, beta_1=0.2)
+        self.opt = keras.optimizers.Adam(0.0002, beta_1=0.5)
         self.loss_bool = keras.losses.BinaryCrossentropy(from_logits=True, reduction="none")
 
     def call(self, img_info, training=None, mask=None):
@@ -43,11 +43,14 @@ class InfoGAN(keras.Model):
         img = Input(shape=self.img_shape)
         s = keras.Sequential([
             mnist_uni_disc_cnn(self.img_shape),
-            Dense(1024)
+            Dense(32),
+            BatchNormalization(),
+            LeakyReLU(),
+            Dropout(0.5),
         ])
         style_dim = self.style_dim if self.fix_std else self.style_dim * 2
         q = keras.Sequential([
-            Dense(128, input_shape=(1024,)),
+            Dense(16, input_shape=(32,)),
             BatchNormalization(),
             LeakyReLU(),
             Dense(style_dim+self.label_dim)
@@ -152,7 +155,7 @@ def train(gan, ds):
 if __name__ == "__main__":
     STYLE_DIM = 2
     LABEL_DIM = 10
-    RAND_DIM = 64
+    RAND_DIM = 8
     LAMBDA = 1
     IMG_SHAPE = (28, 28, 1)
     FIX_STD = True
