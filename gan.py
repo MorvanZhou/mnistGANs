@@ -21,7 +21,7 @@ class GAN(keras.Model):
         self.opt = keras.optimizers.Adam(0.0002, beta_1=0.5)
         self.loss_func = keras.losses.BinaryCrossentropy(from_logits=True)
 
-    def call(self, n, training=None):
+    def call(self, n, training=None, mask=None):
         return self.g.call(tf.random.normal((n, self.latent_dim)), training=training)
 
     def _get_generator(self):

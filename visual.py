@@ -28,7 +28,7 @@ def show_mnist(n=20):
 
 def save_gan(model, ep, **kwargs):
     name = model.__class__.__name__.lower()
-    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv"]:
+    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan"]:
         imgs = model.call(100, training=False).numpy()
         _save_gan(name, ep, imgs, show_label=False)
     elif name == "cgan" or name == "acgan":
