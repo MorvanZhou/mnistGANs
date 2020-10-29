@@ -21,6 +21,7 @@ Toy implementations are organized as following:
     - [Gradient Penalty (WGAN gp)](#WGANpg) 
     - [Wasserstein Divergence (WGAN_div)](#WGANdiv)
 - [Self-Attention GAN](#SAGAN)
+- [Progressive-Growing GAN](#PGGAN)
     
 **3. Can be Conditional**
 
@@ -88,6 +89,13 @@ $ pip3 install -r requirements.txt
 [code](sagan.py)
 
 ![](https://mofanpy.com/static/results/gan/sagan/generating.gif)
+
+## PGGAN
+[PROGRESSIVE GROWING OF GANS FOR IMPROVED QUALITY, STABILITY, AND VARIATION](https://arxiv.org/pdf/1710.10196.pdf)
+
+[code](pggan.py)
+
+![](https://mofanpy.com/static/results/gan/pggan/generating.gif)
 
 ## CGAN
 [Conditional Generative Adversarial Nets](https://arxiv.org/pdf/1411.1784.pdf)
