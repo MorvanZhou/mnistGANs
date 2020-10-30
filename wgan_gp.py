@@ -1,10 +1,12 @@
 # [Improved Training of Wasserstein GANs](https://arxiv.org/pdf/1704.00028.pdf)
 import tensorflow as tf
+from tensorflow import keras
 from utils import set_soft_gpu
 from wgan import WGAN, train
 from mnist_ds import get_train_x
 
 
+# modified from WGAN
 class WGANgp(WGAN):
     """
     WGAN clip weights 方案比较粗暴,
@@ -15,7 +17,7 @@ class WGANgp(WGAN):
         self.lambda_ = lambda_
         self.k = k
         self.d = self._get_discriminator(use_bn=False)      # no critic batch norm
-        self.opt = tf.keras.optimizers.Adam(0.0002, beta_1=0, beta_2=0.9)
+        self.opt = keras.optimizers.Adam(0.0002, beta_1=0, beta_2=0.9)
 
     # gradient penalty
     def gp(self, real_img, fake_img):
@@ -35,10 +37,9 @@ class WGANgp(WGAN):
         all_img = tf.concat((img, g_img), axis=0)
         with tf.GradientTape() as tape:
             pred = self.d.call(all_img, training=True)
-            pred_true, pred_fake = pred[:len(img)], pred[len(img):]
-            w_loss = -tf.reduce_mean(pred_true - pred_fake)  # maximize W distance
-            gp_loss = self.lambda_ * gp
-            loss = w_loss + gp_loss
+            pred_real, pred_fake = pred[:len(img)], pred[len(img):]
+            w_loss = -self.w_distance(pred_real, pred_fake)  # maximize W distance
+            loss = w_loss + self.lambda_ * gp       # add gradient penalty
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
         return w_loss
