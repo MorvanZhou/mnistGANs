@@ -1,4 +1,4 @@
-visual/*/*.png
+visual/
 models/
 .idea/
 logs/
