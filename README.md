@@ -33,6 +33,9 @@ Toy implementations are organized as following:
 
 - [Context-Conditional GAN (CCGAN)](#CCGAN)
 - [CycleGAN](#CycleGAN)
+- [Pix2Pix](#Pix2Pix)
+- [Super-Resolution GAN](#SRGAN)
+- [StyleGAN](#StyleGAN)
 - WIP
  
 # Installation
