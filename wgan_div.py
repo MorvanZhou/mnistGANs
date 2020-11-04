@@ -13,7 +13,7 @@ class WGANdiv(WGANgp):
     提出了Wasserstein散度的概念，摆脱了WGAN需要 [公式] 满足Lipschitz条件的限制。
     """
     def __init__(self, latent_dim, p, lambda_, img_shape):
-        super().__init__(latent_dim, lambda_, None, img_shape)
+        super().__init__(latent_dim, lambda_, img_shape)
         self.p = p
 
     # Wasserstein Divergence
@@ -22,7 +22,7 @@ class WGANdiv(WGANgp):
         noise_img = e * real_img + (1.-e)*fake_img      # extend distribution space
         with tf.GradientTape() as tape:
             tape.watch(noise_img)
-            o = self.d.call(noise_img, training=True)
+            o = self.d(noise_img)
         g = tape.gradient(o, noise_img)         # image gradients
         # the following is different from WGANgp
         gp = tf.pow(tf.reduce_sum(tf.square(g), axis=[1, 2, 3]), self.p)

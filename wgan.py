@@ -22,9 +22,11 @@ class WGAN(keras.Model):
         self.clip = clip
         self.img_shape = img_shape
 
+        self._build()
+
+    def _build(self):
         self.g = self._get_generator()
         self.d = self._get_discriminator()
-
         self.opt = keras.optimizers.RMSprop(0.0002)
 
     def call(self, n, training=None, mask=None):
@@ -49,11 +51,10 @@ class WGAN(keras.Model):
         return tf.reduce_mean(real) - tf.reduce_mean(fake)
 
     def train_d(self, img):
-        g_img = self.call(len(img), training=False)
-        all_img = tf.concat((img, g_img), axis=0)
         with tf.GradientTape() as tape:
-            pred = self.d.call(all_img, training=True)
-            pred_real, pred_fake = pred[:len(img)], pred[len(img):]
+            g_img = self.call(len(img), training=False)
+            all_img = tf.concat((img, g_img), axis=0)
+            pred_real, pred_fake = tf.split(self.d.call(all_img, training=True), num_or_size_splits=2, axis=0)
             loss = -self.w_distance(pred_real, pred_fake)   # maximize W distance
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
@@ -75,11 +76,12 @@ class WGAN(keras.Model):
 def train(gan, ds, steps, d_loop, batch_size):
     t0 = time.time()
     for t in range(steps):
+        g_loss = gan.train_g(batch_size)
         for _ in range(d_loop):
             idx = np.random.randint(0, len(ds), batch_size)
             img = tf.gather(ds, idx)
             d_loss = gan.train_d(img)
-        g_loss = gan.train_g(batch_size)
+
         if t % 1000 == 0:
             t1 = time.time()
             print("t={} | time={:.1f} | d_loss={:.2f} | g_loss={:.2f}".format(
