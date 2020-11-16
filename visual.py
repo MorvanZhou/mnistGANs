@@ -13,6 +13,8 @@ def show_mnist(n=20):
     x, y = x[idx], y[idx]
     n_col = 5
     n_row = len(x) // n_col
+    if x.ndim > 3:
+        x = np.squeeze(x, axis=-1)
     plt.figure(0, (5, n_row))
     for c in range(n_col):
         for r in range(n_row):
@@ -82,6 +84,10 @@ def _img_recenter(img):
 
 
 def _save_img2img_gan(model_name, ep, img1, img2):
+    if img1.ndim > 3:
+        img1 = np.squeeze(img1, axis=-1)
+    if img2.ndim > 3:
+        img2 = np.squeeze(img2, axis=-1)
     plt.clf()
     nc, nr = 20, 10
     plt.figure(0, (nc * 2, nr * 2))
@@ -105,6 +111,8 @@ def _save_img2img_gan(model_name, ep, img1, img2):
 
 
 def _save_gan(model_name, ep, imgs, show_label=False):
+    if imgs.ndim > 3:
+        imgs = np.squeeze(imgs, axis=-1)
     imgs = (imgs + 1) * 255 / 2
     plt.clf()
     nc, nr = 10, 10
@@ -141,6 +149,8 @@ def infogan_comp():
         img_label = tf.convert_to_tensor(img_label, dtype=tf.int32)
         img_style = tf.convert_to_tensor(img_style, dtype=tf.float32)
         imgs = model.g.call([noise, img_label, img_style], training=False).numpy()
+        if imgs.ndim > 3:
+            imgs = np.squeeze(imgs, axis=-1)
         plt.clf()
         nc, nr = 10, 10
         plt.figure(0, (nc * 2, nr * 2))
