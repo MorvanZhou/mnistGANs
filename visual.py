@@ -30,7 +30,7 @@ def show_mnist(n=20):
 
 def save_gan(model, ep, **kwargs):
     name = model.__class__.__name__.lower()
-    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan", "pggan"]:
+    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan", "pggan", "stylegan"]:
         imgs = model.call(100, training=False).numpy()
         _save_gan(name, ep, imgs, show_label=False)
     elif name == "cgan" or name == "acgan":
@@ -203,4 +203,4 @@ if __name__ == "__main__":
     # cgan_res()
     # save_infogan(None, 1)
     # infogan_comp()
-    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "gan", "lsgan", "infogan", "ccgan", "cyclegan", "pix2pix"])
+    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "gan", "lsgan", "infogan", "ccgan", "cyclegan", "pix2pix", "stylegan"])
