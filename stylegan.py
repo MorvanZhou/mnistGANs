@@ -47,47 +47,48 @@ class StyleGAN(keras.Model):
     def _get_generator(self):
         z1 = keras.Input((self.latent_dim,))
         z2 = keras.Input((self.latent_dim,))
-        noise = keras.Input((self.img_shape[0], self.img_shape[1]))
-        b_noise = tf.expand_dims(noise, axis=-1)
+        noise_ = keras.Input((self.img_shape[0], self.img_shape[1]))
+        noise = tf.expand_dims(noise_, axis=-1)
+
         w1 = self.f(z1)
         w2 = self.f(z2)
-        gb = self.g_block(32, self.const, w1, b_noise, upsampling=False)  # [7, 7]
-        gb = self.g_block(32, gb, w1, b_noise)    # [14, 14]
-        gb = self.g_block(16, gb, w2, b_noise)    # [28, 28]
-        o = keras.layers.Conv2D(1, 4, 1, "same", activation=keras.activations.tanh)(gb)
-        g = keras.Model([z1, z2, noise], o, name="generator")
+
+        x = self.add_noise(self.const, noise)
+        x = InstanceNormalization()(x)
+
+        x = self.style_block(32, x, w1, noise, upsampling=False)  # [7, 7]
+        x = self.style_block(32, x, w1, noise)    # [14, 14]
+        x = self.style_block(32, x, w2, noise)    # [28, 28]
+        o = keras.layers.Conv2D(1, 4, 1, "same", activation=keras.activations.tanh)(x)
+        g = keras.Model([z1, z2, noise_], o, name="generator")
         g.summary()
         return g
 
-    def g_block(self, filters, x, w, b_noise, upsampling=True):
+    def style_block(self, filters, x, w, b_noise, upsampling=True):
+        x = self.mod(w, x)
         if upsampling:
             x = keras.layers.UpSampling2D((2, 2), interpolation="bilinear")(x)
-            x = keras.layers.Conv2D(filters, 3, 1, "same")(x)
-        x_shape = x.shape[1:] if x.shape[0] is None else x.shape
-        b_noise_ = b_noise[:, :x_shape[0], :x_shape[1], :]
-        x = self.add_noise(x, b_noise_)
-        x = self.adaIN(w, x)
+
         x = keras.layers.Conv2D(filters, 3, 1, "same")(x)
-        x = self.add_noise(x, b_noise_)
-        x = self.adaIN(w, x)
+        x = self.add_noise(x, b_noise)
+        x = keras.layers.LeakyReLU(0.2)(x)
+        x = InstanceNormalization()(x)
         return x
 
     def add_noise(self, x, b_noise):
+        x_shape = x.shape[1:] if x.shape[0] is None else x.shape
+        b_noise_ = b_noise[:, :x_shape[0], :x_shape[1], :]
         scale = self.add_weight(name="b_scale{}".format(self.b_scale_count), shape=[1, 1, x.shape[-1]])
         self.b_scale_count += 1
-        return scale * b_noise + x
-
-    def adaIN(self, w, x):
-        ys, yb = self.affine_transformation(w, x)
-        return ys * InstanceNormalization()(x) + yb
+        return scale * b_noise_ + x
 
     @staticmethod
-    def affine_transformation(w, x):
-        y_dim = int(x.shape[-1]*2)
+    def mod(w, x):
+        y_dim = int(x.shape[-1] * 2)
         y = keras.layers.Dense(y_dim)(w)
-        y = keras.layers.Reshape([1, 1, -1])(y)     # [n, 1, 1, 2c] per feature map
-        ys, yb = tf.split(y, 2, axis=-1)        # [n, 1, 1, c]
-        return ys, yb
+        y = keras.layers.Reshape([1, 1, -1])(y)  # [n, 1, 1, 2c] per feature map
+        ys, yb = tf.split(y, 2, axis=-1)  # [n, 1, 1, c]
+        return ys * x + yb
 
     def _get_discriminator(self):
         model = keras.Sequential([

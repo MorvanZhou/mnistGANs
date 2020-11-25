@@ -2,3 +2,4 @@ visual/
 models/
 .idea/
 logs/
+mnist.npz

@@ -1,5 +1,18 @@
 from tensorflow import keras
 import tensorflow as tf
+import os
+import numpy as np
+
+MNIST_PATH = "./mnist.npz"
+
+
+def load_mnist(path):
+    if os.path.isfile(path):
+        with np.load(path, allow_pickle=True) as f:
+            x_train, y_train = f['x_train'], f['y_train']
+            x_test, y_test = f['x_test'], f['y_test']
+        return (x_train, y_train), (x_test, y_test)
+    return keras.datasets.mnist.load_data(MNIST_PATH)
 
 
 def get_half_batch_ds(batch_size):
@@ -7,7 +20,7 @@ def get_half_batch_ds(batch_size):
 
 
 def get_ds(batch_size):
-    (x, y), _ = keras.datasets.mnist.load_data()
+    (x, y), _ = load_mnist(MNIST_PATH)
     x = _process_x(x)
     y = tf.cast(y, tf.int32)
     ds = tf.data.Dataset.from_tensor_slices((x, y)).cache().shuffle(1024).batch(batch_size) \
@@ -16,18 +29,18 @@ def get_ds(batch_size):
 
 
 def get_test_x():
-    (_, _), (x, _) = keras.datasets.mnist.load_data()
+    (_, _), (x, _) = load_mnist(MNIST_PATH)
     x = _process_x(x)
     return x
 
 
 def get_test_69():
-    _, (x, y) = keras.datasets.mnist.load_data()
+    _, (x, y) = load_mnist(MNIST_PATH)
     return _process_x(x[y == 6]), _process_x(x[y == 9])
 
 
 def get_train_x():
-    (x, _), _ = keras.datasets.mnist.load_data()
+    (x, _), _ = load_mnist(MNIST_PATH)
     x = _process_x(x)
     return x
 
@@ -37,7 +50,7 @@ def _process_x(x):
 
 
 def get_69_ds():
-    (x, y), _ = keras.datasets.mnist.load_data()
+    (x, y), _ = load_mnist(MNIST_PATH)
     x6, x9 = x[y == 6], x[y == 9]
     return _process_x(x6), _process_x(x9)
 

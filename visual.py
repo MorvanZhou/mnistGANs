@@ -82,10 +82,10 @@ def save_gan(model, ep, **kwargs):
         if "z2" not in globals():
             z2 = np.random.normal(0, 1, size=(9, model.latent_dim))
         imgs = model.predict([z1.repeat(9, axis=0),  np.concatenate([z2 for _ in range(9)], axis=0), np.zeros([len(z1)*9, model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
-        z1_imgs = model.predict([z1, z1, np.zeros([len(z1), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
-        z2_imgs = model.predict([z2, z2, np.zeros([len(z2), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        z1_imgs = 255-model.predict([z1, z1, np.zeros([len(z1), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        z2_imgs = 255-model.predict([z2, z2, np.zeros([len(z2), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
         imgs = np.concatenate([z2_imgs, imgs], axis=0)
-        rest_imgs = np.concatenate([np.zeros([1, 28, 28, 1], dtype=np.float32), z1_imgs], axis=0)
+        rest_imgs = np.concatenate([255*np.ones([1, 28, 28, 1], dtype=np.float32), z1_imgs], axis=0)
         for i in range(len(rest_imgs)):
             imgs = np.concatenate([imgs[:i*10], rest_imgs[i:i+1], imgs[i*10:]], axis=0)
         imgs = _img_recenter(imgs)
