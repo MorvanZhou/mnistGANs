@@ -57,23 +57,20 @@ def save_gan(model, ep, **kwargs):
             mask[i, x0:x1, y0:y1] = 0
         masked_img = input_img * mask
         imgs = model.predict(masked_img)
-        imgs = _img_recenter(imgs)
-        masked_img = _img_recenter(masked_img.numpy())
         _save_img2img_gan(name, ep, masked_img, imgs)
     elif name == "cyclegan":
         if "img6" not in kwargs or "img9" not in kwargs:
             raise ValueError
         img6, img9 = kwargs["img6"][:50], kwargs["img9"][:50]
         img9_, img6_ = model.g.call(img6, training=False), model.f.call(img9, training=False)
-        img = np.concatenate((_img_recenter(img6.numpy()), _img_recenter(img9.numpy())), axis=0)
-        imgs = np.concatenate((_img_recenter(img9_.numpy()), _img_recenter(img6_.numpy())), axis=0)
+        img = np.concatenate((img6.numpy(), img9.numpy()), axis=0)
+        imgs = np.concatenate((img9_.numpy(), img6_.numpy()), axis=0)
         _save_img2img_gan(name, ep, img, imgs)
     elif name in ["srgan"]:
         if "img" not in kwargs:
             raise ValueError
         input_img = kwargs["img"][:100]
         imgs = model.predict(input_img)
-        imgs = _img_recenter(imgs)
         _save_img2img_gan(name, ep, input_img, imgs)
     elif name == "stylegan":
         global z1, z2
@@ -88,7 +85,6 @@ def save_gan(model, ep, **kwargs):
         rest_imgs = np.concatenate([255*np.ones([1, 28, 28, 1], dtype=np.float32), z1_imgs], axis=0)
         for i in range(len(rest_imgs)):
             imgs = np.concatenate([imgs[:i*10], rest_imgs[i:i+1], imgs[i*10:]], axis=0)
-        imgs = _img_recenter(imgs)
         _save_gan(name, ep, imgs, show_label=False)
     else:
         raise ValueError(name)
@@ -99,10 +95,15 @@ def _img_recenter(img):
 
 
 def _save_img2img_gan(model_name, ep, img1, img2):
+    if not isinstance(img1, np.ndarray):
+        img1 = img1.numpy()
+    if not isinstance(img2, np.ndarray):
+        img2 = img2.numpy()
     if img1.ndim > 3:
         img1 = np.squeeze(img1, axis=-1)
     if img2.ndim > 3:
         img2 = np.squeeze(img2, axis=-1)
+    img1, img2 = _img_recenter(img1), _img_recenter(img2)
     plt.clf()
     nc, nr = 20, 10
     plt.figure(0, (nc * 2, nr * 2))
@@ -126,9 +127,11 @@ def _save_img2img_gan(model_name, ep, img1, img2):
 
 
 def _save_gan(model_name, ep, imgs, show_label=False):
+    if not isinstance(imgs, np.ndarray):
+        imgs = imgs.numpy()
     if imgs.ndim > 3:
         imgs = np.squeeze(imgs, axis=-1)
-    imgs = (imgs + 1) * 255 / 2
+    imgs = _img_recenter(imgs)
     plt.clf()
     nc, nr = 10, 10
     plt.figure(0, (nc * 2, nr * 2))
