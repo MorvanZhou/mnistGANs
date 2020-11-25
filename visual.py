@@ -30,7 +30,7 @@ def show_mnist(n=20):
 
 def save_gan(model, ep, **kwargs):
     name = model.__class__.__name__.lower()
-    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan", "pggan", "stylegan"]:
+    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan", "pggan"]:
         imgs = model.call(100, training=False).numpy()
         _save_gan(name, ep, imgs, show_label=False)
     elif name == "cgan" or name == "acgan":
@@ -75,6 +75,21 @@ def save_gan(model, ep, **kwargs):
         imgs = model.predict(input_img)
         imgs = _img_recenter(imgs)
         _save_img2img_gan(name, ep, input_img, imgs)
+    elif name == "stylegan":
+        global z1, z2
+        if "z1" not in globals():
+            z1 = np.random.normal(0, 1, size=(9, model.latent_dim))
+        if "z2" not in globals():
+            z2 = np.random.normal(0, 1, size=(9, model.latent_dim))
+        imgs = model.predict([z1.repeat(9, axis=0),  np.concatenate([z2 for _ in range(9)], axis=0), np.zeros([len(z1)*9, model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        z1_imgs = model.predict([z1, z1, np.zeros([len(z1), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        z2_imgs = model.predict([z2, z2, np.zeros([len(z2), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        imgs = np.concatenate([z2_imgs, imgs], axis=0)
+        rest_imgs = np.concatenate([np.zeros([1, 28, 28, 1], dtype=np.float32), z1_imgs], axis=0)
+        for i in range(len(rest_imgs)):
+            imgs = np.concatenate([imgs[:i*10], rest_imgs[i:i+1], imgs[i*10:]], axis=0)
+        imgs = _img_recenter(imgs)
+        _save_gan(name, ep, imgs, show_label=False)
     else:
         raise ValueError(name)
 
