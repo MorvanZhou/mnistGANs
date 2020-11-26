@@ -30,13 +30,11 @@ class AdaMod(keras.layers.Layer):
     def build(self, input_shape):
         x_input_shape, w_input_shape = input_shape
         self.ys = keras.Sequential([
-            keras.layers.Dense(x_input_shape[-1], input_shape=w_input_shape[1:], trainable=self.trainable,
-                               kernel_initializer=keras.initializers.RandomNormal(1, 0.02)),
+            keras.layers.Dense(x_input_shape[-1], input_shape=w_input_shape[1:], trainable=self.trainable),
             keras.layers.Reshape([1, 1, -1])
         ])
         self.yb = keras.Sequential([
-            keras.layers.Dense(x_input_shape[-1], input_shape=w_input_shape[1:], trainable=self.trainable,
-                               kernel_initializer=keras.initializers.RandomNormal(0, 0.02)),
+            keras.layers.Dense(x_input_shape[-1], input_shape=w_input_shape[1:], trainable=self.trainable),
             keras.layers.Reshape([1, 1, -1])
         ])  # [1, 1, c] per feature map
 
