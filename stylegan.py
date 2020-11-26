@@ -8,10 +8,40 @@ from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn
 import time
 import numpy as np
-try:
-    from tensorflow_addons.layers import InstanceNormalization
-except ImportError:
-    from utils import InstanceNormalization
+
+
+class AdaNorm(keras.layers.Layer):
+    def __init__(self, epsilon=1e-5):
+        super().__init__()
+        self.epsilon = epsilon
+
+    def call(self, x, training=None):
+        ins_mean, ins_sigma = tf.nn.moments(x, axes=[1, 2], keepdims=True)
+        x_ins = (x - ins_mean) * (tf.math.rsqrt(ins_sigma + self.epsilon))
+        return x_ins
+
+
+class AdaMod(keras.layers.Layer):
+    def __init__(self, trainable=None):
+        super().__init__()
+        self.trainable = trainable
+        self.ys, self.yb = None, None
+
+    def build(self, input_shape):
+        x_input_shape, w_input_shape = input_shape
+        self.ys = keras.Sequential([
+            keras.layers.Dense(x_input_shape[-1], input_shape=w_input_shape[1:], trainable=self.trainable),
+            keras.layers.Reshape([1, 1, -1])
+        ])
+        self.yb = keras.Sequential([
+            keras.layers.Dense(x_input_shape[-1], input_shape=w_input_shape[1:], trainable=self.trainable),
+            keras.layers.Reshape([1, 1, -1])
+        ])  # [1, 1, c] per feature map
+
+    def call(self, inputs, training=None):
+        x, w = inputs
+        o = self.ys(w, training=training) * x + self.yb(w, training=training)
+        return o
 
 
 class StyleGAN(keras.Model):
@@ -24,7 +54,7 @@ class StyleGAN(keras.Model):
         self.img_shape = img_shape
         self.b_scale_count = 0
 
-        self.const = self.add_weight("const", [7, 7, 64], initializer=keras.initializers.RandomNormal(0, 0.05))
+        self.const = self.add_weight("const", [7, 7, 16], initializer=keras.initializers.RandomNormal(0, 0.05))
         self.f = self._get_f()
         self.g = self._get_generator()
         self.d = self._get_discriminator()
@@ -37,10 +67,14 @@ class StyleGAN(keras.Model):
             inputs = (tf.convert_to_tensor(i) for i in inputs)
         return self.g.call(inputs, training=training)
 
-    def _get_f(self):
+    @staticmethod
+    def _get_f():
         f = keras.Sequential([
             keras.layers.Dense(32),
+            keras.layers.BatchNormalization(),
+            keras.layers.ReLU(),
             keras.layers.Dense(32),
+            keras.layers.BatchNormalization(),
         ])
         return f
 
@@ -54,8 +88,7 @@ class StyleGAN(keras.Model):
         w2 = self.f(z2)
 
         x = self.add_noise(self.const, noise)
-        x = InstanceNormalization()(x)
-
+        x = AdaNorm()(x)
         x = self.style_block(32, x, w1, noise, upsampling=False)  # [7, 7]
         x = self.style_block(32, x, w1, noise)    # [14, 14]
         x = self.style_block(32, x, w2, noise)    # [28, 28]
@@ -65,14 +98,14 @@ class StyleGAN(keras.Model):
         return g
 
     def style_block(self, filters, x, w, b_noise, upsampling=True):
-        x = self.mod(w, x)
+        x = AdaMod()((x, w))
         if upsampling:
             x = keras.layers.UpSampling2D((2, 2), interpolation="bilinear")(x)
 
         x = keras.layers.Conv2D(filters, 3, 1, "same")(x)
         x = self.add_noise(x, b_noise)
-        x = keras.layers.LeakyReLU(0.2)(x)
-        x = InstanceNormalization()(x)
+        x = keras.layers.ReLU()(x)
+        x = AdaNorm()(x)
         return x
 
     def add_noise(self, x, b_noise):
@@ -81,14 +114,6 @@ class StyleGAN(keras.Model):
         scale = self.add_weight(name="b_scale{}".format(self.b_scale_count), shape=[1, 1, x.shape[-1]])
         self.b_scale_count += 1
         return scale * b_noise_ + x
-
-    @staticmethod
-    def mod(w, x):
-        y_dim = int(x.shape[-1] * 2)
-        y = keras.layers.Dense(y_dim)(w)
-        y = keras.layers.Reshape([1, 1, -1])(y)  # [n, 1, 1, 2c] per feature map
-        ys, yb = tf.split(y, 2, axis=-1)  # [n, 1, 1, c]
-        return ys * x + yb
 
     def _get_discriminator(self):
         model = keras.Sequential([
