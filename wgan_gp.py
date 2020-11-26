@@ -16,10 +16,8 @@ class WGANgp(WGAN):
         super().__init__(latent_dim, None, img_shape)
         self.lambda_ = lambda_
 
-    def _build(self):
-        self.g = self._get_generator()
+    def _build_d(self):
         self.d = self._get_discriminator(use_bn=False)      # no critic batch norm
-        self.opt = keras.optimizers.Adam(0.0002, beta_1=0, beta_2=0.9)
 
     # gradient penalty
     def gp(self, real_img, fake_img):
@@ -33,12 +31,12 @@ class WGANgp(WGAN):
         gp = tf.square(g_norm2 - 1.)
         return tf.reduce_mean(gp)
 
-    def train_d(self, img):
+    def train_d(self, real_img):
         with tf.GradientTape() as tape:
-            g_img = self.call(len(img), training=False)
-            gp = self.gp(img, g_img)
-            all_img = tf.concat((img, g_img), axis=0)
-            pred_real, pred_fake = tf.split(self.d.call(all_img, training=True), num_or_size_splits=2, axis=0)
+            fake_img = self.call(len(real_img), training=False)
+            gp = self.gp(real_img, fake_img)
+            pred_real = self.d.call(real_img, training=True)
+            pred_fake = self.d.call(fake_img, training=True)
             w_loss = -self.w_distance(pred_real, pred_fake)  # maximize W distance
             loss = w_loss + self.lambda_ * gp       # add gradient penalty
         grads = tape.gradient(loss, self.d.trainable_variables)

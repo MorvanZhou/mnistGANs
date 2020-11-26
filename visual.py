@@ -74,7 +74,7 @@ def save_gan(model, ep, **kwargs):
         _save_img2img_gan(name, ep, input_img, imgs)
     elif name == "stylegan":
         n = 12
-        global z1, z2
+        global z1, z2       # z1 row, z2 col
         if "z1" not in globals():
             z1 = np.random.normal(0, 1, size=(n, model.latent_dim))
         if "z2" not in globals():

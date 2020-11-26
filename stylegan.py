@@ -54,7 +54,7 @@ class StyleGAN(keras.Model):
         self.img_shape = img_shape
         self.b_scale_count = 0
 
-        self.const = self.add_weight("const", [7, 7, 16], initializer=keras.initializers.RandomNormal(0, 0.05))
+        self.const = self.add_weight("const", [7, 7, 128], initializer=keras.initializers.RandomNormal(0, 0.05))
         self.f = self._get_f()
         self.g = self._get_generator()
         self.d = self._get_discriminator()
@@ -70,11 +70,8 @@ class StyleGAN(keras.Model):
     @staticmethod
     def _get_f():
         f = keras.Sequential([
-            keras.layers.Dense(32),
-            keras.layers.BatchNormalization(),
-            keras.layers.ReLU(),
-            keras.layers.Dense(32),
-            keras.layers.BatchNormalization(),
+            keras.layers.Dense(128),
+            keras.layers.Dense(128),
         ])
         return f
 
@@ -89,10 +86,10 @@ class StyleGAN(keras.Model):
 
         x = self.add_noise(self.const, noise)
         x = AdaNorm()(x)
-        x = self.style_block(32, x, w1, noise, upsampling=False)  # [7, 7]
+        x = self.style_block(64, x, w1, noise, upsampling=False)  # [7, 7]
         x = self.style_block(32, x, w1, noise)    # [14, 14]
         x = self.style_block(32, x, w2, noise)    # [28, 28]
-        o = keras.layers.Conv2D(1, 4, 1, "same", activation=keras.activations.tanh)(x)
+        o = keras.layers.Conv2D(1, 5, 1, "same", activation=keras.activations.tanh)(x)
         g = keras.Model([z1, z2, noise_], o, name="generator")
         g.summary()
         return g
@@ -132,9 +129,10 @@ class StyleGAN(keras.Model):
         return loss, binary_accuracy(label, pred)
 
     def train_g(self, d_label):
-        inputs = (tf.random.normal((len(d_label), self.latent_dim)),
-                  tf.random.normal((len(d_label), self.latent_dim)),
-                  tf.random.normal((len(d_label), self.img_shape[0], self.img_shape[1])))
+        z1 = tf.random.normal((len(d_label), self.latent_dim))
+        z2 = tf.random.normal((len(d_label), self.latent_dim)) if np.random.random() < 0.5 else z1
+        noise = tf.random.normal((len(d_label), self.img_shape[0], self.img_shape[1]))
+        inputs = (z1, z2, noise)
         with tf.GradientTape() as tape:
             g_img = self.call(inputs, training=True)
             pred = self.d.call(g_img, training=False)

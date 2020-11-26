@@ -36,10 +36,11 @@ if __name__ == "__main__":
     IMG_SHAPE = (28, 28, 1)
     BATCH_SIZE = 64
     STEP = 20001
+    D_LOOP = 5
 
     set_soft_gpu(True)
     d = get_train_x()
     m = WGANdiv(LATENT_DIM, P, LAMBDA, IMG_SHAPE)
-    train(m, d, STEP, d_loop=1, batch_size=BATCH_SIZE)
+    train(m, d, STEP, d_loop=D_LOOP, batch_size=BATCH_SIZE)
 
 

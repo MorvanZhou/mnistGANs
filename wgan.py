@@ -21,13 +21,12 @@ class WGAN(keras.Model):
         self.latent_dim = latent_dim
         self.clip = clip
         self.img_shape = img_shape
-
-        self._build()
-
-    def _build(self):
+        self.opt = keras.optimizers.Adam(0.0002, beta_1=0, beta_2=0.9)
         self.g = self._get_generator()
+        self._build_d()
+
+    def _build_d(self):
         self.d = self._get_discriminator()
-        self.opt = keras.optimizers.RMSprop(0.0002)
 
     def call(self, n, training=None, mask=None):
         return self.g.call(tf.random.normal((n, self.latent_dim)), training=training)
@@ -50,11 +49,11 @@ class WGAN(keras.Model):
         # the distance of two data distributions
         return tf.reduce_mean(real) - tf.reduce_mean(fake)
 
-    def train_d(self, img):
+    def train_d(self, real_img):
         with tf.GradientTape() as tape:
-            g_img = self.call(len(img), training=False)
-            pred_real = self.d.call(img, training=True)
-            pred_fake = self.d.call(g_img, training=True)
+            fake_img = self.call(len(real_img), training=False)
+            pred_real = self.d.call(real_img, training=True)
+            pred_fake = self.d.call(fake_img, training=True)
             loss = -self.w_distance(pred_real, pred_fake)   # maximize W distance
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
@@ -76,12 +75,11 @@ class WGAN(keras.Model):
 def train(gan, ds, steps, d_loop, batch_size):
     t0 = time.time()
     for t in range(steps):
-        g_loss = gan.train_g(batch_size)
         for _ in range(d_loop):
             idx = np.random.randint(0, len(ds), batch_size)
-            img = tf.gather(ds, idx)
-            d_loss = gan.train_d(img)
-
+            real_img = tf.gather(ds, idx)
+            d_loss = gan.train_d(real_img)
+        g_loss = gan.train_g(batch_size)
         if t % 1000 == 0:
             t1 = time.time()
             print("t={} | time={:.1f} | d_loss={:.2f} | g_loss={:.2f}".format(
