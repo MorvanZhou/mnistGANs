@@ -53,8 +53,8 @@ class WGAN(keras.Model):
     def train_d(self, img):
         with tf.GradientTape() as tape:
             g_img = self.call(len(img), training=False)
-            all_img = tf.concat((img, g_img), axis=0)
-            pred_real, pred_fake = tf.split(self.d.call(all_img, training=True), num_or_size_splits=2, axis=0)
+            pred_real = self.d.call(img, training=True)
+            pred_fake = self.d.call(g_img, training=True)
             loss = -self.w_distance(pred_real, pred_fake)   # maximize W distance
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
