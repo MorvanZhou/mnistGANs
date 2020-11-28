@@ -62,7 +62,7 @@ def save_gan(model, ep, **kwargs):
         if "img6" not in kwargs or "img9" not in kwargs:
             raise ValueError
         img6, img9 = kwargs["img6"][:50], kwargs["img9"][:50]
-        img9_, img6_ = model.g.call(img6, training=False), model.f.call(img9, training=False)
+        img9_, img6_ = model.g12.call(img6, training=False), model.g21.call(img9, training=False)
         img = np.concatenate((img6.numpy(), img9.numpy()), axis=0)
         imgs = np.concatenate((img9_.numpy(), img6_.numpy()), axis=0)
         _save_img2img_gan(name, ep, img, imgs)
