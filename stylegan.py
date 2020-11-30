@@ -3,7 +3,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from visual import save_gan, cvt_gif
-from utils import set_soft_gpu, binary_accuracy, save_weights
+from utils import set_soft_gpu, save_weights
 from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn
 import time
@@ -126,41 +126,40 @@ class StyleGAN(keras.Model):
             loss = self.loss_bool(label, pred)
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
-        return loss, binary_accuracy(label, pred)
+        return loss
 
-    def train_g(self, d_label):
-        z1 = tf.random.normal((len(d_label), self.latent_dim))
-        z2 = tf.random.normal((len(d_label), self.latent_dim)) if np.random.random() < 0.5 else z1
-        noise = tf.random.normal((len(d_label), self.img_shape[0], self.img_shape[1]))
+    def train_g(self, n):
+        z1 = tf.random.normal((n, self.latent_dim))
+        z2 = tf.random.normal((n, self.latent_dim)) if np.random.random() < 0.5 else z1
+        noise = tf.random.normal((n, self.img_shape[0], self.img_shape[1]))
         inputs = (z1, z2, noise)
         with tf.GradientTape() as tape:
             g_img = self.call(inputs, training=True)
             pred = self.d.call(g_img, training=False)
-            loss = self.loss_bool(d_label, pred)
+            loss = self.loss_bool(tf.ones_like(pred), pred)
         grads = tape.gradient(loss, self.g.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.g.trainable_variables))
-        return loss, g_img, binary_accuracy(d_label, pred)
+        return loss, g_img
 
     def step(self, img):
-        d_label = tf.ones((len(img) * 2, 1), tf.float32)  # let d think generated images are real
-        g_loss, g_img, g_acc = self.train_g(d_label)
+        g_loss, g_img = self.train_g(len(img) * 2)
 
         d_label = tf.concat((tf.ones((len(img), 1), tf.float32), tf.zeros((len(g_img) // 2, 1), tf.float32)), axis=0)
         img = tf.concat((img, g_img[:len(g_img) // 2]), axis=0)
-        d_loss, d_acc = self.train_d(img, d_label)
-        return d_loss, d_acc, g_loss, g_acc
+        d_loss = self.train_d(img, d_label)
+        return d_loss, g_loss
 
 
 def train(gan, ds, epoch):
     t0 = time.time()
     for ep in range(epoch):
         for t, (img, _) in enumerate(ds):
-            d_loss, d_acc, g_loss, g_acc = gan.step(img)
+            d_loss, g_loss = gan.step(img)
             if t % 400 == 0:
                 t1 = time.time()
                 print(
-                    "ep={} | time={:.1f} | t={} | d_acc={:.2f} | g_acc={:.2f} | d_loss={:.2f} | g_loss={:.2f}".format(
-                        ep, t1 - t0, t, d_acc.numpy(), g_acc.numpy(), d_loss.numpy(), g_loss.numpy(), ))
+                    "ep={} | time={:.1f} | t={} | d_loss={:.2f} | g_loss={:.2f}".format(
+                        ep, t1 - t0, t, d_loss.numpy(), g_loss.numpy(), ))
                 t0 = t1
         save_gan(gan, ep)
     save_weights(gan)
