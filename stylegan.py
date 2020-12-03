@@ -54,7 +54,7 @@ class StyleGAN(keras.Model):
         self.img_shape = img_shape
         self.b_scale_count = 0
 
-        self.const = self.add_weight("const", [7, 7, 128], initializer=keras.initializers.RandomNormal(0, 0.05))
+        self.const = tf.random.normal([7, 7, 128], 0, 0.05)
         self.f = self._get_f()
         self.g = self._get_generator()
         self.d = self._get_discriminator()
@@ -137,8 +137,9 @@ class StyleGAN(keras.Model):
             g_img = self.call(inputs, training=True)
             pred = self.d.call(g_img, training=False)
             loss = self.loss_bool(tf.ones_like(pred), pred)
-        grads = tape.gradient(loss, self.g.trainable_variables)
-        self.opt.apply_gradients(zip(grads, self.g.trainable_variables))
+        var = self.f.trainable_variables + self.g.trainable_variables
+        grads = tape.gradient(loss, var)
+        self.opt.apply_gradients(zip(grads, var))
         return loss, g_img
 
     def step(self, img):
