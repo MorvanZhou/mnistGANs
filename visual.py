@@ -76,14 +76,18 @@ def save_gan(model, ep, **kwargs):
         n = 12
         global z1, z2       # z1 row, z2 col
         if "z1" not in globals():
-            z1 = np.random.normal(0, 1, size=(n, model.latent_dim))
+            z1 = np.random.normal(0, 1, size=(n, 1, model.latent_dim))
         if "z2" not in globals():
-            z2 = np.random.normal(0, 1, size=(n, model.latent_dim))
-        imgs = model.predict([z1.repeat(n, axis=0),  np.concatenate([z2 for _ in range(n)], axis=0), np.zeros([len(z1)*n, model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
-        z1_imgs = 255-model.predict([z1, z1, np.zeros([len(z1), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
-        z2_imgs = 255-model.predict([z2, z2, np.zeros([len(z2), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+            z2 = np.random.normal(0, 1, size=(n, 1, model.latent_dim))
+        imgs = model.predict([
+            np.concatenate(
+                (z1.repeat(n, axis=0).repeat(1, axis=1), np.repeat(np.concatenate([z2 for _ in range(n)], axis=0), 2, axis=1)),
+                axis=1),
+            np.zeros([len(z1)*n, model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        z1_imgs = -model.predict([z1.repeat(model.n_style, axis=1), np.zeros([len(z1), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
+        z2_imgs = -model.predict([z2.repeat(model.n_style, axis=1), np.zeros([len(z2), model.img_shape[0], model.img_shape[1]], dtype=np.float32)])
         imgs = np.concatenate([z2_imgs, imgs], axis=0)
-        rest_imgs = np.concatenate([255*np.ones([1, 28, 28, 1], dtype=np.float32), z1_imgs], axis=0)
+        rest_imgs = np.concatenate([np.ones([1, 28, 28, 1], dtype=np.float32), z1_imgs], axis=0)
         for i in range(len(rest_imgs)):
             imgs = np.concatenate([imgs[:i*(n+1)], rest_imgs[i:i+1], imgs[i*(n+1):]], axis=0)
         _save_gan(name, ep, imgs, show_label=False, nc=n+1, nr=n+1)

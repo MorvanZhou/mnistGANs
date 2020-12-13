@@ -30,7 +30,7 @@ class CycleGAN(keras.Model):
         self.loss_img = keras.losses.MeanAbsoluteError()    # a better result when using mse
 
     def _get_generator(self, name):
-        model = mnist_uni_img2img(self.img_shape, name=name)
+        model = mnist_uni_img2img(self.img_shape, name=name, norm="instance")
         model.summary()
         return model
 

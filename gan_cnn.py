@@ -3,6 +3,31 @@ from tensorflow import keras
 import tensorflow as tf
 
 
+class InstanceNormalization(keras.layers.Layer):
+    """Batch Instance Normalization Layer (https://arxiv.org/abs/1805.07925)."""
+
+    def __init__(self, epsilon=1e-5):
+        super().__init__()
+        self.epsilon = epsilon
+        self.gamma, self.beta = None, None
+
+    def build(self, input_shape):
+        self.gamma = self.add_weight(
+            name='gamma',
+            shape=[1, 1, input_shape[-1]],
+            initializer=keras.initializers.RandomNormal(1, 0.02))
+
+        self.beta = self.add_weight(
+            name='beta',
+            shape=[1, 1, input_shape[-1]],
+            initializer=keras.initializers.RandomNormal(0, 0.02))
+
+    def call(self, x, trainable=None):
+        ins_mean, ins_sigma = tf.nn.moments(x, axes=[1, 2], keepdims=True)
+        x_ins = (x - ins_mean) * (tf.math.rsqrt(ins_sigma + self.epsilon))
+        return x_ins * self.gamma + self.beta
+
+
 def mnist_uni_gen_cnn(input_shape):
     return keras.Sequential([
         # [n, latent] -> [n, 7 * 7 * 128] -> [n, 7, 7, 128]
@@ -41,24 +66,32 @@ def mnist_uni_disc_cnn(input_shape=(28, 28, 1), use_bn=True):
     return model
 
 
-def mnist_uni_img2img(img_shape, name="generator"):
+def mnist_uni_img2img(img_shape, name="generator", norm="batch"):
+    def do_norm():
+        if norm == "batch":
+            _norm = [BatchNormalization()]
+        elif norm == "instance":
+            _norm = [InstanceNormalization()]
+        else:
+            _norm = []
+        return _norm
     model = keras.Sequential([
         # [n, 28, 28, n] -> [n, 14, 14, 64]
         Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=img_shape),
-        BatchNormalization(),
+        ] + do_norm() + [
         LeakyReLU(),
         # -> [n, 7, 7, 128]
         Conv2D(128, (4, 4), strides=(2, 2), padding='same'),
-        BatchNormalization(),
+        ] + do_norm() + [
         LeakyReLU(),
 
         # -> [n, 14, 14, 64]
         Conv2DTranspose(64, (4, 4), strides=(2, 2), padding='same'),
-        BatchNormalization(),
+        ] + do_norm() + [
         ReLU(),
         # -> [n, 28, 28, 32]
         Conv2DTranspose(32, (4, 4), strides=(2, 2), padding='same'),
-        BatchNormalization(),
+        ] + do_norm() + [
         ReLU(),
         # -> [n, 28, 28, 1]
         Conv2D(img_shape[-1], (4, 4), padding='same', activation=keras.activations.tanh)
