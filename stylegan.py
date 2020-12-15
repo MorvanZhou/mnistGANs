@@ -25,18 +25,16 @@ class AdaNorm(keras.layers.Layer):
 class AdaMod(keras.layers.Layer):
     def __init__(self):
         super().__init__()
-        self.l1, self.ys, self.yb = None, None, None
+        self.ys, self.yb = None, None
 
     def call(self, inputs, **kwargs):
         x, w = inputs
-        # w = self.l1(w)
         s, b = self.ys(w), self.yb(w)
         o = s * x + b
         return o
 
     def build(self, input_shape):
         x_shape, w_shape = input_shape
-        # self.l1 = keras.layers.Dense(128, input_shape=w_shape[1:])
         self.ys = keras.Sequential([
             keras.layers.Dense(x_shape[-1], input_shape=w_shape[1:], name="s",
                                kernel_initializer=initer.RandomNormal(0, 1),
