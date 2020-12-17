@@ -4,28 +4,32 @@ import tensorflow as tf
 
 
 class InstanceNormalization(keras.layers.Layer):
-    """Batch Instance Normalization Layer (https://arxiv.org/abs/1805.07925)."""
-
-    def __init__(self, epsilon=1e-5):
+    def __init__(self, axis=(1, 2), epsilon=1e-6):
         super().__init__()
+        # NHWC
         self.epsilon = epsilon
-        self.gamma, self.beta = None, None
+        self.axis = axis
+        self.beta, self.gamma = None, None
 
     def build(self, input_shape):
+        # NHWC
+        shape = [1, 1, 1, input_shape[-1]]
         self.gamma = self.add_weight(
             name='gamma',
-            shape=[1, 1, input_shape[-1]],
-            initializer=keras.initializers.RandomNormal(1, 0.02))
+            shape=shape,
+            initializer='ones')
 
         self.beta = self.add_weight(
             name='beta',
-            shape=[1, 1, input_shape[-1]],
-            initializer=keras.initializers.RandomNormal(0, 0.02))
+            shape=shape,
+            initializer='zeros')
 
-    def call(self, x, trainable=None):
-        ins_mean, ins_sigma = tf.nn.moments(x, axes=[1, 2], keepdims=True)
-        x_ins = (x - ins_mean) * (tf.math.rsqrt(ins_sigma + self.epsilon))
-        return x_ins * self.gamma + self.beta
+    def call(self, x, *args, **kwargs):
+        mean = tf.math.reduce_mean(x, axis=self.axis, keepdims=True)
+        diff = x - mean
+        variance = tf.reduce_mean(tf.math.square(diff), axis=self.axis, keepdims=True)
+        x_norm = diff * tf.math.rsqrt(variance + self.epsilon)
+        return x_norm * self.gamma + self.beta
 
 
 def mnist_uni_gen_cnn(input_shape):
