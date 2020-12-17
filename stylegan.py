@@ -12,43 +12,37 @@ import tensorflow.keras.initializers as initer
 
 
 class AdaNorm(keras.layers.Layer):
-    def __init__(self, epsilon=1e-5):
+    def __init__(self, axis=(1, 2), epsilon=1e-5):
         super().__init__()
+        # NHWC
+        self.axis = axis
         self.epsilon = epsilon
 
     def call(self, x, **kwargs):
-        ins_mean, ins_sigma = tf.nn.moments(x, axes=[1, 2], keepdims=True)
-        x_ins = (x - ins_mean) * (tf.math.rsqrt(ins_sigma + self.epsilon))
-        return x_ins
+        mean = tf.math.reduce_mean(x, axis=self.axis, keepdims=True)
+        diff = x - mean
+        variance = tf.reduce_mean(tf.math.square(diff), axis=self.axis, keepdims=True)
+        x_norm = diff * tf.math.rsqrt(variance + self.epsilon)
+        return x_norm
 
 
 class AdaMod(keras.layers.Layer):
     def __init__(self):
         super().__init__()
-        self.l1, self.ys, self.yb = None, None, None
+        self.y = None
 
     def call(self, inputs, **kwargs):
         x, w = inputs
-        # w = self.l1(w)
-        s, b = self.ys(w), self.yb(w)
-        o = s * x + b
+        y = self.y(w)
+        o = (y[:, 0] + 1) * x + y[:, 1]
         return o
 
     def build(self, input_shape):
         x_shape, w_shape = input_shape
-        # self.l1 = keras.layers.Dense(128, input_shape=w_shape[1:])
-        self.ys = keras.Sequential([
-            keras.layers.Dense(x_shape[-1], input_shape=w_shape[1:], name="s",
-                               kernel_initializer=initer.RandomNormal(0, 1),
-                               bias_initializer=initer.Constant(1)
-                               ),   # this kernel and bias is important
-            keras.layers.Reshape([1, 1, -1])
-        ])
-        self.yb = keras.Sequential([
-            keras.layers.Dense(x_shape[-1], input_shape=w_shape[1:], name="b",
-                               kernel_initializer=initer.RandomNormal(0, 1)),
-            keras.layers.Reshape([1, 1, -1])
-        ])  # [1, 1, c] per feature map
+        self.y = keras.Sequential([
+            keras.layers.Dense(x_shape[-1]*2, input_shape=w_shape[1:], name="y",
+                               kernel_initializer=initer.RandomNormal(0, 1)),   # this kernel is important
+            keras.layers.Reshape([2, 1, 1, -1])])  # [2, h, w, c]
 
 
 class AddNoise(keras.layers.Layer):
@@ -64,8 +58,8 @@ class AddNoise(keras.layers.Layer):
 
     def build(self, input_shape):
         self.x_shape, _ = input_shape
-        self.s = self.add_weight(name="noise_scale", shape=[1, 1, self.x_shape[-1]],
-                                 initializer=initer.RandomNormal(0., .5))   # large initial noise
+        self.s = self.add_weight(name="noise_scale", shape=[1, 1, self.x_shape[-1]],     # [h, w, c]
+                                 initializer=initer.random_normal(0., 1.))   # large initial noise
 
 
 class Map(keras.layers.Layer):
