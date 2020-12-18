@@ -20,8 +20,8 @@ Toy implementations are organized as following:
 - [Wasserstein GAN (WGAN)](#WGAN) 
     - [Gradient Penalty (WGAN gp)](#WGANpg) 
     - [Wasserstein Divergence (WGAN_div)](#WGANdiv)
-- [Self-Attention GAN](#SAGAN)
-- [Progressive-Growing GAN](#PGGAN)
+- [Self-Attention GAN (SAGAN)](#SAGAN)
+- [Progressive-Growing GAN (PGGAN)](#PGGAN)
     
 **3. Can be Conditional**
 
@@ -34,7 +34,7 @@ Toy implementations are organized as following:
 - [Context-Conditional GAN (CCGAN)](#CCGAN)
 - [CycleGAN](#CycleGAN)
 - [Pix2Pix](#Pix2Pix)
-- [Super-Resolution GAN](#SRGAN)
+- [Super-Resolution GAN (SRGAN)](#SRGAN)
 - [StyleGAN](#StyleGAN)
 - WIP
  
