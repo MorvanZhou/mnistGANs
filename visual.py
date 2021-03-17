@@ -30,9 +30,17 @@ def show_mnist(n=20):
 
 def save_gan(model, ep, **kwargs):
     name = model.__class__.__name__.lower()
-    if name in ["gan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan", "pggan"]:
+    if name in ["dcgan", "wgan", "wgangp", "lsgan", "wgandiv", "sagan", "pggan"]:
         imgs = model.call(100, training=False).numpy()
         _save_gan(name, ep, imgs, show_label=False)
+    elif name == "gan":
+        data = model.call(5, training=False).numpy()
+        plt.plot(data.T)
+        plt.xticks((), ())
+        dir_ = "visual/{}".format(name)
+        os.makedirs(dir_, exist_ok=True)
+        path = dir_ + "/{}.png".format(ep)
+        plt.savefig(path)
     elif name == "cgan" or name == "acgan":
         img_label = np.arange(0, 10).astype(np.int32).repeat(10, axis=0)
         imgs = model.predict(img_label)
@@ -93,7 +101,8 @@ def save_gan(model, ep, **kwargs):
         _save_gan(name, ep, imgs, show_label=False, nc=n+1, nr=n+1)
     else:
         raise ValueError(name)
-
+    plt.clf()
+    plt.close()
 
 def _img_recenter(img):
     return (img + 1) * 255 / 2
@@ -196,7 +205,7 @@ def infogan_comp():
     plot(noise, img_label, np.concatenate((np.zeros_like(img_style), img_style), axis=1), 2)
 
 
-def cvt_gif(folders_or_gan):
+def cvt_gif(folders_or_gan, shrink=10):
     if not isinstance(folders_or_gan, list):
         folders_or_gan = [folders_or_gan.__class__.__name__.lower()]
     for folder in folders_or_gan:
@@ -211,7 +220,7 @@ def cvt_gif(folders_or_gan):
             except ValueError:
                 continue
             img = Image.open(f)
-            img = img.resize((img.width//10, img.height//10), Image.ANTIALIAS)
+            img = img.resize((img.width//shrink, img.height//shrink), Image.ANTIALIAS)
             imgs.append(img)
         path = "{}/generating.gif".format(folder)
         if os.path.exists(path):
@@ -225,4 +234,4 @@ if __name__ == "__main__":
     # cgan_res()
     # save_infogan(None, 1)
     # infogan_comp()
-    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "gan", "lsgan", "infogan", "ccgan", "cyclegan", "pix2pix", "stylegan"])
+    cvt_gif(["wgangp", "wgandiv", "wgan", "cgan", "acgan", "dcgan", "lsgan", "infogan", "ccgan", "cyclegan", "pix2pix", "stylegan"])

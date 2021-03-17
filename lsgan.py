@@ -3,10 +3,10 @@ import tensorflow as tf
 from tensorflow import keras
 from utils import set_soft_gpu
 from mnist_ds import get_half_batch_ds
-from gan import GAN, train
+from dcgan import DCGAN, train
 
 
-class LSGAN(GAN):
+class LSGAN(DCGAN):
     """
     和原始 GAN 相比，只是修改了 loss function, 但有时在最开始的时候崩掉, 生成空白
     """

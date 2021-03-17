@@ -11,7 +11,7 @@ What does the MNIST data look like?
 Toy implementations are organized as following:
 
 **1. Base Method**
-
+- [GAN](#GAN)
 - [Deep Convolutional GAN (DCGAN)](#DCGAN) 
 
 **2. Loss or Structure Modifications**
@@ -46,14 +46,19 @@ $ pip3 install -r requirements.txt
 ```
 
  
-## DCGAN
+## GAN
 [Generative Adversarial Nets](https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf)
-
-[Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
 
 [code](gan.py) - [gif result](https://mofanpy.com/static/results/gan/gan/generating.gif)
 
 ![](https://mofanpy.com/static/results/gan/gan/generating.gif)
+
+## DCGAN
+[Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
+
+[code](dcgan.py) - [gif result](https://mofanpy.com/static/results/gan/dcgan/generating.gif)
+
+![](https://mofanpy.com/static/results/gan/dcgan/generating.gif)
  
 ## LSGAN
 [Least Squares Generative Adversarial Networks](https://arxiv.org/pdf/1611.04076.pdf)
