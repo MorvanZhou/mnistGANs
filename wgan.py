@@ -57,7 +57,7 @@ class WGAN(keras.Model):
             loss = -self.w_distance(pred_real, pred_fake)   # maximize W distance
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
-        # clip discriminator's gradients
+        # clip discriminator's weights
         for w in self.d.trainable_weights:
             w.assign(tf.clip_by_value(w, -self.clip, self.clip))
         return loss
