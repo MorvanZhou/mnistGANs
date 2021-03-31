@@ -16,18 +16,21 @@ class Attention(keras.layers.Layer):
         self.f = None
         self.g = None
         self.h = None
+        self.v = None
         self.attention = None
 
     def build(self, input_shape):
-        self.f = self.block(input_shape[-1]//8)     # reduce channel size, reduce computation
-        self.g = self.block(input_shape[-1]//8)     # reduce channel size, reduce computation
-        self.h = self.block(input_shape[-1])        # scale back to original channel size
+        c = input_shape[-1]
+        self.f = self.block(c//8)     # reduce channel size, reduce computation
+        self.g = self.block(c//8)     # reduce channel size, reduce computation
+        self.h = self.block(c//8)     # reduce channel size, reduce computation
+        self.v = keras.layers.Conv2D(c, 1, 1)              # scale back to original channel size
         self.gamma = tf.Variable(self._gamma)
 
     @staticmethod
     def block(c):
         return keras.Sequential([
-            keras.layers.Conv2D(c, 1, strides=1),   # [n, w, h, c]
+            keras.layers.Conv2D(c, 1, 1),   # [n, w, h, c] 1*1conv
             keras.layers.Reshape((-1, c)),          # [n, w*h, c]
         ])
 
@@ -39,7 +42,7 @@ class Attention(keras.layers.Layer):
         self.attention = tf.nn.softmax(s, axis=-1)
         context_wh = tf.matmul(self.attention, h)  # [n, w*h, w*h] @ [n, w*h, c] = [n, w*h, c]
         context = tf.reshape(context_wh, tf.shape(inputs))    # [n, w, h, c]
-        o = self.gamma * context + inputs
+        o = self.v(self.gamma * context) + inputs   # residual
         return o
 
 
@@ -59,7 +62,7 @@ class SAGAN(keras.Model):
         self.g = self._get_generator()
         self.d = self._get_discriminator()
         self.opt = keras.optimizers.Adam(0.0002, beta_1=0.5)
-        self.loss_func = keras.losses.Hinge()
+        self.loss_func = keras.losses.Hinge()       # change loss to hinge based on the paper
 
     def call(self, n, training=None, mask=None):
         return self.g.call(tf.random.normal((n, self.latent_dim)), training=training)
