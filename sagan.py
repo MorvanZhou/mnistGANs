@@ -9,24 +9,26 @@ import time
 
 
 class Attention(keras.layers.Layer):
-    def __init__(self, gamma=1., trainable=None):
+    def __init__(self, gamma=0.01, trainable=None):
         super().__init__(trainable=trainable)
-        self.gamma = gamma
+        self._gamma = gamma
+        self.gamma = None
         self.f = None
         self.g = None
         self.h = None
         self.attention = None
 
     def build(self, input_shape):
-        self.f = self.block(input_shape[-1]//8)
-        self.g = self.block(input_shape[-1]//8)
-        self.h = self.block(input_shape[-1])
+        self.f = self.block(input_shape[-1]//8)     # reduce channel size, reduce computation
+        self.g = self.block(input_shape[-1]//8)     # reduce channel size, reduce computation
+        self.h = self.block(input_shape[-1])        # scale back to original channel size
+        self.gamma = tf.Variable(self._gamma)
 
     @staticmethod
     def block(c):
         return keras.Sequential([
-            keras.layers.Conv2D(c, 1, strides=1),  # [n, w, h, c]
-            keras.layers.Reshape((-1, c)),
+            keras.layers.Conv2D(c, 1, strides=1),   # [n, w, h, c]
+            keras.layers.Reshape((-1, c)),          # [n, w*h, c]
         ])
 
     def call(self, inputs, **kwargs):
