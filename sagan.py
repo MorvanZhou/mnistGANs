@@ -9,7 +9,7 @@ import time
 
 
 class Attention(keras.layers.Layer):
-    def __init__(self, gamma=0.01, trainable=None):
+    def __init__(self, gamma=0.01, trainable=True):
         super().__init__(trainable=trainable)
         self._gamma = gamma
         self.gamma = None
@@ -25,7 +25,10 @@ class Attention(keras.layers.Layer):
         self.g = self.block(c//8)     # reduce channel size, reduce computation
         self.h = self.block(c//8)     # reduce channel size, reduce computation
         self.v = keras.layers.Conv2D(c, 1, 1)              # scale back to original channel size
-        self.gamma = tf.Variable(self._gamma)
+        global GAMMA_id
+        self.gamma = self.add_weight(
+            "gamma{}".format(GAMMA_id), shape=None, initializer=keras.initializers.constant(self._gamma))
+        GAMMA_id += 1
 
     @staticmethod
     def block(c):
@@ -35,13 +38,15 @@ class Attention(keras.layers.Layer):
         ])
 
     def call(self, inputs, **kwargs):
-        f = self.f(inputs)    # [n, w, h, c] -> [n, w*h, c]
-        g = self.g(inputs)    # [n, w, h, c] -> [n, w*h, c]
-        h = self.h(inputs)    # [n, w, h, c] -> [n, w*h, c]
-        s = tf.matmul(f, g, transpose_b=True)   # [n, w*h, c] @ [n, c, w*h] = [n, w*h, w*h]
+        f = self.f(inputs)    # [n, w, h, c] -> [n, w*h, c//8]
+        g = self.g(inputs)    # [n, w, h, c] -> [n, w*h, c//8]
+        h = self.h(inputs)    # [n, w, h, c] -> [n, w*h, c//8]
+        s = tf.matmul(f, g, transpose_b=True)   # [n, w*h, c//8] @ [n, c//8, w*h] = [n, w*h, w*h]
         self.attention = tf.nn.softmax(s, axis=-1)
-        context_wh = tf.matmul(self.attention, h)  # [n, w*h, w*h] @ [n, w*h, c] = [n, w*h, c]
-        context = tf.reshape(context_wh, tf.shape(inputs))    # [n, w, h, c]
+        context_wh = tf.matmul(self.attention, h)  # [n, w*h, w*h] @ [n, w*h, c//8] = [n, w*h, c//8]
+        s = inputs.shape        # [n, w, h, c]
+        cs = context_wh.shape   # [n, w*h, c//8]
+        context = tf.reshape(context_wh, [-1, s[1], s[2], cs[-1]])    # [n, w, h, c//8]
         o = self.v(self.gamma * context) + inputs   # residual
         return o
 
@@ -156,10 +161,11 @@ def train(gan, ds, epoch):
 
 
 if __name__ == "__main__":
+    GAMMA_id = 0
     LATENT_DIM = 100
     IMG_SHAPE = (28, 28, 1)
     BATCH_SIZE = 64
-    GAMMA = 0.5
+    GAMMA = 0.01
     EPOCH = 20
 
     set_soft_gpu(True)
