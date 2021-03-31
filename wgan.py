@@ -45,16 +45,19 @@ class WGAN(keras.Model):
         return model
 
     @staticmethod
-    def w_distance(real, fake):
+    def w_distance(fake, real=None):
         # the distance of two data distributions
-        return tf.reduce_mean(real) - tf.reduce_mean(fake)
+        if real is None:
+            return tf.reduce_mean(fake)
+        else:
+            return tf.reduce_mean(fake) - tf.reduce_mean(real)
 
     def train_d(self, real_img):
         with tf.GradientTape() as tape:
             fake_img = self.call(len(real_img), training=False)
             pred_real = self.d.call(real_img, training=True)
             pred_fake = self.d.call(fake_img, training=True)
-            loss = -self.w_distance(pred_real, pred_fake)   # maximize W distance
+            loss = self.w_distance(pred_fake, pred_real)   # maximize W distance
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))
         # clip discriminator's weights
@@ -66,7 +69,7 @@ class WGAN(keras.Model):
         with tf.GradientTape() as tape:
             g_img = self.call(n, training=True)
             pred_fake = self.d.call(g_img, training=False)
-            loss = tf.reduce_mean(-pred_fake)        # minimize W distance
+            loss = -self.w_distance(pred_fake)       # minimize W distance
         grads = tape.gradient(loss, self.g.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.g.trainable_variables))
         return loss

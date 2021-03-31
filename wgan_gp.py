@@ -1,6 +1,5 @@
 # [Improved Training of Wasserstein GANs](https://arxiv.org/pdf/1704.00028.pdf)
 import tensorflow as tf
-from tensorflow import keras
 from utils import set_soft_gpu
 from wgan import WGAN, train
 from mnist_ds import get_train_x
@@ -37,7 +36,7 @@ class WGANgp(WGAN):
             gp = self.gp(real_img, fake_img)
             pred_real = self.d.call(real_img, training=True)
             pred_fake = self.d.call(fake_img, training=True)
-            w_loss = -self.w_distance(pred_real, pred_fake)  # maximize W distance
+            w_loss = self.w_distance(pred_fake, pred_real)  # maximize W distance
             loss = w_loss + self.lambda_ * gp       # add gradient penalty
         grads = tape.gradient(loss, self.d.trainable_variables)
         self.opt.apply_gradients(zip(grads, self.d.trainable_variables))

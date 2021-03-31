@@ -28,6 +28,14 @@ class WGANdiv(WGANgp):
         gp = tf.pow(tf.reduce_sum(tf.square(g), axis=[1, 2, 3]), self.p)
         return tf.reduce_mean(gp)
 
+    @staticmethod
+    def w_distance(fake, real=None):
+        # sign is reversed in WGANdiv
+        if real is None:
+            return - tf.reduce_mean(fake)
+        else:
+            return -(tf.reduce_mean(fake) - tf.reduce_mean(real))
+
 
 if __name__ == "__main__":
     LATENT_DIM = 100
