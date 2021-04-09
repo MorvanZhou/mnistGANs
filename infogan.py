@@ -125,14 +125,14 @@ class InfoGAN(keras.Model):
         self.opt.apply_gradients(zip(grads, self.g.trainable_variables))
         return loss, g_img, binary_accuracy(d_label, pred_bool)
 
-    def step(self, real_img, real_img_label):
+    def step(self, real_img):
         random_img_label = tf.convert_to_tensor(np.random.randint(0, 10, len(real_img)*2), dtype=tf.int32)
         random_img_style = tf.random.uniform((len(real_img)*2, self.style_dim), -self.style_scale, self.style_scale)
         g_loss, g_img, g_bool_acc = self.train_g(random_img_label, random_img_style)
 
         real_fake_img = tf.concat((real_img, g_img), axis=0)    # 32+64
         real_fake_d_label = tf.concat(      # 32+32
-            (tf.ones((len(real_img_label), 1), tf.float32), tf.zeros((len(g_img)//2, 1), tf.float32)), axis=0)
+            (tf.ones((len(real_img), 1), tf.float32), tf.zeros((len(g_img)//2, 1), tf.float32)), axis=0)
         d_loss, d_bool_acc, d_class_acc = self.train_d(real_fake_img, real_fake_d_label, random_img_label, random_img_style)
         return d_loss, d_bool_acc, g_loss, g_bool_acc, random_img_label, d_class_acc
 
@@ -140,8 +140,8 @@ class InfoGAN(keras.Model):
 def train(gan, ds):
     t0 = time.time()
     for ep in range(EPOCH):
-        for t, (real_img, real_img_label) in enumerate(ds):
-            d_loss, d_bool_acc, g_loss, g_bool_acc, g_img_label, d_class_acc = gan.step(real_img, real_img_label)
+        for t, (real_img, _) in enumerate(ds):
+            d_loss, d_bool_acc, g_loss, g_bool_acc, g_img_label, d_class_acc = gan.step(real_img)
             if t % 400 == 0:
                 t1 = time.time()
                 print("ep={} | time={:.1f}|t={}|d_acc={:.2f}|d_classacc={:.2f}|g_acc={:.2f}|d_loss={:.2f}|g_loss={:.2f}".format(
