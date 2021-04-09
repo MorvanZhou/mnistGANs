@@ -28,6 +28,7 @@ Toy implementations are organized as following:
 - [Conditional GAN (CGAN)](#CGAN) 
 - [Auxiliary Classifier GAN (ACGAN)](#ACGAN) 
 - [InfoGAN](#InfoGAN) 
+- [StyleGAN](#StyleGAN)
 
 **4. Image to Image Transformation**
 
@@ -35,7 +36,6 @@ Toy implementations are organized as following:
 - [CycleGAN](#CycleGAN)
 - [Pix2Pix](#Pix2Pix)
 - [Super-Resolution GAN (SRGAN)](#SRGAN)
-- [StyleGAN](#StyleGAN)
 - WIP
  
 # Installation
@@ -123,6 +123,12 @@ $ pip3 install -r requirements.txt
 
 ![](https://mofanpy.com/static/results/gan/infogan/generating.gif)
 
+## StyleGAN
+[A Style-Based Generator Architecture for Generative Adversarial Networks](https://arxiv.org/pdf/1812.04948.pdf)
+
+[code](stylegan.py) - [gif result](https://mofanpy.com/static/results/gan/stylegan/generating.gif)
+
+![](https://mofanpy.com/static/results/gan/stylegan/generating.gif)
 
 ## CCGAN
 [Semi-Supervised Learning with Context-Conditional Generative Adversarial Networks](https://arxiv.org/pdf/1611.06430.pdf)
@@ -151,10 +157,3 @@ $ pip3 install -r requirements.txt
 [code](srgan.py) - [gif result](https://mofanpy.com/static/results/gan/srgan/generating.gif)
 
 ![](https://mofanpy.com/static/results/gan/srgan/generating.gif)
-
-## StyleGAN
-[A Style-Based Generator Architecture for Generative Adversarial Networks](https://arxiv.org/pdf/1812.04948.pdf)
-
-[code](stylegan.py) - [gif result](https://mofanpy.com/static/results/gan/stylegan/generating.gif)
-
-![](https://mofanpy.com/static/results/gan/stylegan/generating.gif)
