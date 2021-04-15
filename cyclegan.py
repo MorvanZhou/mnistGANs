@@ -58,9 +58,9 @@ class CycleGAN(keras.Model):
         return loss1 + loss2, fake2, fake1
 
     def identity(self, real1, real2):
-        loss21 = self.loss_img(real1, self.g21(real2))
-        loss12 = self.loss_img(real2, self.g12(real1))
-        return loss21, loss12
+        loss12 = self.loss_img(real1, self.g12(real1))
+        loss21 = self.loss_img(real2, self.g21(real2))
+        return loss12, loss21
 
     def train_g(self, real1, real2):
         with tf.GradientTape() as tape:
@@ -72,7 +72,7 @@ class CycleGAN(keras.Model):
             loss12 = d_loss12 + self.lambda_ * cycle_loss
             loss21 = d_loss21 + self.lambda_ * cycle_loss
             if self.use_identity:
-                id_loss21, id_loss12 = self.identity(real1, real2)
+                id_loss12, id_loss21 = self.identity(real1, real2)
                 loss12 += self.lambda_ * id_loss12
                 loss21 += self.lambda_ * id_loss21
             loss = loss12 + loss21
