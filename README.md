@@ -33,8 +33,8 @@ Toy implementations are organized as following:
 **4. Image to Image Transformation**
 
 - [Context-Conditional GAN (CCGAN)](#CCGAN)
-- [CycleGAN](#CycleGAN)
 - [Pix2Pix](#Pix2Pix)
+- [CycleGAN](#CycleGAN)
 - [Super-Resolution GAN (SRGAN)](#SRGAN)
 - WIP
  
@@ -137,6 +137,13 @@ $ pip3 install -r requirements.txt
 
 ![](https://mofanpy.com/static/results/gan/ccgan/generating.gif)
 
+## Pix2Pix
+[Image-to-Image Translation with Conditional Adversarial Networks](https://arxiv.org/pdf/1611.07004.pdf)
+
+[code](pix2pix.py) - [gif result](https://mofanpy.com/static/results/gan/pix2pix/generating.gif)
+
+![](https://mofanpy.com/static/results/gan/pix2pix/generating.gif)
+
 ## CycleGAN
 [Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/pdf/1703.10593)
 
@@ -144,12 +151,6 @@ $ pip3 install -r requirements.txt
 
 ![](https://mofanpy.com/static/results/gan/cyclegan/generating.gif)
 
-## Pix2Pix
-[Image-to-Image Translation with Conditional Adversarial Networks](https://arxiv.org/pdf/1611.07004.pdf)
-
-[code](pix2pix.py) - [gif result](https://mofanpy.com/static/results/gan/pix2pix/generating.gif)
-
-![](https://mofanpy.com/static/results/gan/pix2pix/generating.gif)
 
 ## SRGAN
 [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://openaccess.thecvf.com/content_cvpr_2017/papers/Ledig_Photo-Realistic_Single_Image_CVPR_2017_paper.pdf)
