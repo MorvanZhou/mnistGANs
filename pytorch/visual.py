@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PIL import Image
+import torch
 
 os.makedirs("visual", exist_ok=True)
-
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # def show_mnist(n=20):
 #     from tensorflow import keras
 #     (x, y), _ = keras.datasets.mnist.load_data()
@@ -43,7 +43,8 @@ def save_gan(model, ep, **kwargs):
         plt.savefig(path)
     elif name == "cgan" or name == "acgan":
         img_label = np.arange(0, 10).astype(np.int32).repeat(10, axis=0)
-        imgs = model.predict(img_label)
+        img_label = torch.tensor(img_label).to(device)
+        imgs = model.forward(img_label)
         _save_gan(name, ep, imgs, show_label=True)
     elif name in ["infogan"]:
         img_label = np.arange(0, model.label_dim).astype(np.int32).repeat(10, axis=0)
@@ -142,7 +143,7 @@ def _save_img2img_gan(model_name, ep, img1, img2):
 
 def _save_gan(model_name, ep, imgs, show_label=False, nc=10, nr=10):
     if not isinstance(imgs, np.ndarray):
-        imgs = imgs.numpy()
+        imgs = imgs.detach().cpu().numpy()
     if imgs.ndim > 3:
         imgs = np.squeeze(imgs, axis=1)
     imgs = _img_recenter(imgs)

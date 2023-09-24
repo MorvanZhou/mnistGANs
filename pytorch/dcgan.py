@@ -10,7 +10,7 @@ from mnist_ds import load_mnist
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
 import time
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class G(nn.Module):
     def __init__(self, input_shape):
@@ -82,7 +82,7 @@ class DCGAN(nn.Module):
         return loss
 
     def step(self, data):
-        data_real = torch.tensor(data).to(device)
+        data_real = torch.tensor(data, device=device)
         data_gen = self.forward(self.batch_size)
         d_loss = self.train_d(data_real, data_gen.detach())  #梯度的计算截止到data_gen，不再反向传回generator
      

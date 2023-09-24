@@ -71,7 +71,7 @@ class mnist_uni_disc_cnn(nn.Module):
         layers = []
 
         # [n, c, 28, 28] -> [n, 64, 14, 14]
-        layers.append(nn.Conv2d(1, 64, kernel_size=4, stride=2, padding=1))
+        layers.append(nn.Conv2d(input_shape[0], 64, kernel_size=4, stride=2, padding=1))
         if use_bn:
             layers.append(nn.BatchNorm2d(64))
         layers.append(nn.LeakyReLU(0.2))

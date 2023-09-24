@@ -11,7 +11,6 @@ import time
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-
 def get_real_data(data_dim, batch_size):
     for i in range(300):
         a = np.random.uniform(1, 2, size=batch_size)[:, np.newaxis].astype(np.float32)
