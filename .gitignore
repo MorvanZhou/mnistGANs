@@ -1,5 +1,7 @@
-visual/
-models/
-.idea/
-logs/
+visual
+models
+.idea
+logs
 mnist.npz
+data
+__pycache__
